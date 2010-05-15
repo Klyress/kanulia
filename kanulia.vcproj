@@ -74,7 +74,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="cudart.lib cutil32D.lib glew32.lib"
-				OutputFile="../../bin/win32/$(ConfigurationName)/amoua/Julia4D.exe"
+				OutputFile="../../bin/win32/$(ConfigurationName)/amoua/kanulia.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(CUDA_LIB_PATH)/../lib;../../common/lib"
 				IgnoreAllDefaultLibraries="false"
@@ -167,7 +167,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="cudart.lib cutil32.lib glew32.lib"
-				OutputFile="../../bin/win32/$(ConfigurationName)/amoua/Julia4D.exe"
+				OutputFile="../../bin/win32/$(ConfigurationName)/amoua/kanulia.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(CUDA_LIB_PATH)/../lib;../../common/lib"
 				IgnoreDefaultLibraryNames="libcmtD.lib"
