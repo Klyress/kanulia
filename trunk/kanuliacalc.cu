@@ -456,7 +456,7 @@ __device__ inline int CalcJulia4D(const T xPos, const T yPos, const T zPos, cons
     T ww = w * w;
     int i = crn;
 
-	if (y>0) return i;
+//	if (y>0) return i;
     do {
 		i--;
 		if (xx + yy + zz + ww > T(4.0))
