@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual C++ Express 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Julia4D", "Julia4D.vcproj", "{C11DA132-FBC0-4505-95BA-58D7C16274DC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kanulia", "kanulia.vcproj", "{C11DA132-FBC0-4505-95BA-58D7C16274DC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
