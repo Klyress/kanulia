@@ -1,12 +1,25 @@
-#Controls
-
 = How does this shit work's =
 
-be calm, read the dos box
-and trust in your intuition
+== Keyboard ==
 
+*ESC* *q* quit
 
-= Details =
+*h* help: this page
 
-close your eye, focus on the force
-and don't forget to use *shift* also
+*r* reset most parameters
+
+*c* *C* change color palette
+
+*a* *A* animate color palette increase and decrease speed
+
+*d* *D* increase and decrease max iteration.
+Caution, you can blow up your drivers in julia4D mode
+
+*j* *J* increase and decrease size of the "mandelbrot selection"
+
+*u* *U* rotate speed around xw plan
+*i* *I* rotate speed around yw plan
+*o* *O* rotate speed around xy plan
+*p* *P* rotate speed around xz plan
+
+== Mouse ==
