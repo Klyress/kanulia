@@ -18,8 +18,24 @@ Caution, you can blow up your drivers in julia4D mode
 *j* *J* increase and decrease size of the "mandelbrot selection"
 
 *u* *U* rotate speed around xw plan
+
 *i* *I* rotate speed around yw plan
+
 *o* *O* rotate speed around xy plan
+
 *p* *P* rotate speed around xz plan
 
 == Mouse ==
+
+=== Mandelbrot selection zone ===
+in the lower left corner
+
+*wheel* zoom in and out
+
+*left clic* set the real seed point
+
+*shift left clic* set the imaginary seed point
+
+*middle clic* travel the real seed point
+
+*shift middle clic* travel the real seed point
