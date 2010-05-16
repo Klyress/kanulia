@@ -60,8 +60,8 @@ int crunch = 10;
 // Start mandel selection 1/julia heigh of windows
 int julia = 4;
 
-// Start with no 4D neither
-int julia4D = 2;
+// Start with
+int julia4D = 0;
 // Angle for julia4D view
 float anglexw = 0.;
 float angleyw = 0.;
@@ -400,12 +400,14 @@ void keyboardFunc(unsigned char k, int, int)
             break;
 
         case '?':
+		case 'h':
             printf("xOff = %5.8f\n", xOff);
             printf("yOff = %5.8f\n", yOff);
             printf("scale = %e\n", scale);
             printf("detail = %d\n", crunch);
             printf("color = %d\n", colorSeed);
             printf("\n");
+			ShellExecute(0, "open", "http://code.google.com/p/kanulia/wiki/Control", 0, 0, 1);
             break;
 
         case 'r': case 'R':
@@ -420,7 +422,7 @@ void keyboardFunc(unsigned char k, int, int)
             colors.x = 3;
             colors.y = 5;
             colors.z = 7;
-            crunch = 512;
+            crunch = 10;
 			CUDA_SAFE_CALL(cudaMemcpyToSymbol("crn", &crunch, sizeof(int)));
             animationFrame = 0;
             animationStep = 0;
@@ -789,6 +791,12 @@ void precisionMenu(int i)
 
 void mainMenu(int i)
 {
+
+	switch (i) {
+		case 10:
+			ShellExecute(0, "open", "http://code.google.com/p/kanulia/wiki/Control", 0, 0, 1);
+			break;		
+	}
     pass = 0;
 }
 
@@ -822,6 +830,7 @@ void juliaMenu(int i)
 			CUDA_SAFE_CALL(cudaMemcpyToSymbol("crn", &crunch, sizeof(int)));
 			julia4D = 2;
 			break;
+
 	}
     pass = 0;
 }
@@ -901,6 +910,7 @@ void initMenus()
 	glutAddSubMenu("Precision",precisionmenu);
 	glutAddSubMenu("Julia",juliamenu);
 	glutAddSubMenu("Color",colormenu);
+	glutAddMenuEntry("help", 10);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
