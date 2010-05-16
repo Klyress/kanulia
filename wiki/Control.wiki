@@ -1,4 +1,4 @@
-= How does this shit work's =
+= Controls =
 
 == Keyboard ==
 
