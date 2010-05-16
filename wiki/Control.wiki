@@ -27,10 +27,10 @@ Caution, you can blow up your drivers in julia4D mode
 
 == Mouse ==
 
+*wheel* zoom in and out also the only way to move to move. by zooming in and out, it is possible to move.
+
 === Mandelbrot selection zone ===
 in the lower left corner
-
-*wheel* zoom in and out
 
 *left clic* set the real seed point
 
@@ -39,3 +39,13 @@ in the lower left corner
 *middle clic* travel the real seed point
 
 *shift middle clic* travel the real seed point
+
+=== julia 2D ===
+
+nothing special yet
+
+=== julia 4D ===
+
+*left drag* rotate around xw and yw plan
+
+*shift left drag* rotate around xy and xz plan
