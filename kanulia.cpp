@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+//#include <shellapi.h>
 #include <GL/glew.h>
 
 #if defined(__APPLE__) || defined(MACOSX)
@@ -21,6 +22,7 @@
 #include <cutil_inline.h>
 #include <cuda_gl_interop.h>
 #include <rendercheck_gl.h>
+
 
 #include "kanulia.h"
 
@@ -401,6 +403,7 @@ void keyboardFunc(unsigned char k, int, int)
 
         case '?':
 		case 'h':
+		case 'H':
             printf("xOff = %5.8f\n", xOff);
             printf("yOff = %5.8f\n", yOff);
             printf("scale = %e\n", scale);
@@ -910,7 +913,7 @@ void initMenus()
 	glutAddSubMenu("Precision",precisionmenu);
 	glutAddSubMenu("Julia",juliamenu);
 	glutAddSubMenu("Color",colormenu);
-	glutAddMenuEntry("help", 10);
+	glutAddMenuEntry("Help", 10);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
