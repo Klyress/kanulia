@@ -316,12 +316,12 @@ void displayFunc(void)
 			double sj = scaleJ / (float)imageW;
 			double xj;
 			double yj;
-			if ( julia4D == 0 ) // but not in 4D mode
+			if ( julia4D == 0 ) // blury in 2D mode
 			{
 				xj = (xs - (double)imageW * 0.5f) * sj + xJOff;
 				yj = (ys - (double)imageH * 0.5f) * sj + yJOff;
 			}
-			else // but differente if in 4D mode
+			else // but not if in 4D mode
 			{
 				xj = (0.5f - (double)imageW * 0.5f) * sj + xJOff;
 				yj = (0.5f - (double)imageH * 0.5f) * sj + yJOff;
@@ -331,7 +331,13 @@ void displayFunc(void)
 //			if (pass && !startPass) // Use the adaptive sampling version when animating.
 //				RunJulia4D1_sm13(d_dst, imageW, imageH, x, y, s, xj, yj, sj, colors, pass++, animationFrame, precisionMode, numSMs, julia, julia4D);
 //			else
-				RunJulia4Drepart(d_dst, imageW, imageH, x, y, s, xj, yj, sj, xs, ys, colors, pass++, animationFrame, precisionMode, numSMs, julia, julia4D);
+				RunJulia4Drepart(d_dst, // destination buffer
+					imageW, imageH, // windows size
+					x, y, s, xj, yj, sj, // seed point and scale for mandel brod and julia
+					( 2.0 * xs ) - 1.0, ( 2.0 * ys ) - 1.0 , // blur modification
+					colors, pass++, // color palette, and pass number
+					animationFrame, precisionMode,
+					numSMs, julia, julia4D);
             cudaThreadSynchronize();
 
             // Estimate the total time of the frame if one more pass is rendered
