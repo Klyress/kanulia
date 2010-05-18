@@ -9,7 +9,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-//#include <shellapi.h>
+
+#include "windows.h"
+
 #include <GL/glew.h>
 
 #if defined(__APPLE__) || defined(MACOSX)
@@ -233,7 +235,7 @@ void displayFunc(void)
 		CUDA_SAFE_CALL(cudaMemcpyToSymbol("xJS", &xJSOff, sizeof(double)));
 		CUDA_SAFE_CALL(cudaMemcpyToSymbol("yJS", &yJSOff, sizeof(double)));
 		StepOffre += 0.003;
-		printf("StepOffre\n");
+//		printf("StepOffre\n");
 	    pass = 0;
 	}
 	if (StepOffim < 1.)
@@ -244,7 +246,7 @@ void displayFunc(void)
 		CUDA_SAFE_CALL(cudaMemcpyToSymbol("zJS", &zJSOff, sizeof(double)));
 		CUDA_SAFE_CALL(cudaMemcpyToSymbol("wJS", &wJSOff, sizeof(double)));
 		StepOffim += 0.003;
-		printf("StepOffim\n");
+//		printf("StepOffim\n");
 	    pass = 0;
 	}
 	if (vanglexw != 0.)
