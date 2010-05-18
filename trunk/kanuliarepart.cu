@@ -131,7 +131,7 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 				}
 				if (julia4D == 2)
 				{
-					m = SolidJulia4D<T>(ix-1,iy-1,imageW,imageH,scaleJ,2*xblur,2*yblur,&r,&g,&b,xJOff,yJOff);
+					m = SolidJulia4D<T>(ix-1,iy-1,imageW,imageH,scaleJ,xblur,yblur,&r,&g,&b,xJOff,yJOff);
 				}
     		}
 //			m = blockIdx.x;         // uncomment to see scheduling order
