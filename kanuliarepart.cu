@@ -98,7 +98,10 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 				}
 				if (!(seedre||seedim))
 				{
-					m = CalcMandelbrot<T>(xPos, yPos);
+					float hue;
+//					m = CalcMandelbrot<T>(xPos, yPos);
+					m = CalcJulia4Dhue<T>(xPos,  yPos,  zJS,  wJS, &hue);
+					HSL2RGB(hue, 0.6, 0.5, &r, &g, &b);
 				}
     		} else {
 			    // Calculate the location
@@ -138,7 +141,7 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 
             // Convert the Mandelbrot index into a color
             uchar4 color;
-			m = m > 0 ? crn - m : 0;
+//			m = m > 0 ? crn - m : 0;
 
             if ((julia4D)&&((ix >= imageW / julia) || (iy >= imageH / julia))) {
 				color.x = r;
@@ -161,7 +164,11 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 				
 				if (!(seedre||seedim))
 				{
-					if (m) {
+					color.x = r;
+					color.y = g;
+					color.z = b;
+
+/*					if (m) {
 						m += animationFrame;
 						color.x = m * colors.x;
 						color.y = m * colors.y;
@@ -170,7 +177,8 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 						color.x = 0;
 						color.y = 0;
 						color.z = 0;
-					}
+					}*/
+					
 				}
 			}
 
@@ -192,133 +200,6 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 
 } // Julia4D0
 
-
-// The Julia4D secondary AA pass CUDA GPU thread function
-/*template<class T>
-__global__ void Julia4D1_sm13(uchar4 *dst, const int imageW, const int imageH, const T xOff, const T yOff,
-  const T scale, const T xJOff, const T yJOff, const T scaleJ, const uchar4 colors,
-  const int frame, const int animationFrame, const int gridWidth, const int numBlocks, const int julia, const int julia4D)
-{
-    __shared__ unsigned int blockIndex;
-    __shared__ unsigned int blockX, blockY;
-
-    // loop until all blocks completed
-    while(1) {
-        if ((threadIdx.x==0) && (threadIdx.y==0)) {
-            // get block to process
-            blockIndex = atomicAdd(&blockCounter, 1);
-            blockX = blockIndex % gridWidth;            // note: this is slow, but only called once per block here
-            blockY = blockIndex / gridWidth;
-        }
-#ifndef __DEVICE_EMULATION__
-        __syncthreads();
-#endif
-
-        if (blockIndex >= numBlocks) break;  // finish
-
-        // process this block
-        const int ix = blockDim.x * blockX + threadIdx.x;
-        const int iy = blockDim.y * blockY + threadIdx.y;
-		int r = 0;int g = 0;int b = 0;
-
-        if ((ix < imageW) && (iy < imageH)) {
-		    // Get the current pixel color
- 		    int pixel = imageW * iy + ix;
-		    uchar4 pixelColor = dst[pixel];
-		    int count = 0;
-
-		    // Search for pixels out of tolerance surrounding the current pixel
-		    if (ix > 0)
-			    count += CheckColors(pixelColor, dst[pixel - 1]);
-		    if (ix + 1 < imageW)
-			    count += CheckColors(pixelColor, dst[pixel + 1]);
-		    if (iy > 0)
-			    count += CheckColors(pixelColor, dst[pixel - imageW]);
-		    if (iy + 1 < imageH)
-			    count += CheckColors(pixelColor, dst[pixel + imageW]);
-		    if (count) {
-
-				int m = 0;
-				if ((ix < imageW / julia) && (iy < imageH / julia)) {
-				    // Calculate the location
-				    const T xPos = (T)ix * scale * julia + xOff;
-					const T yPos = (T)iy * scale * julia + yOff;
-
-					// Calculate the Mandelbrot index for the current location
-					m = CalcMandelbrot<T>(xPos, yPos);
-    			} else {
-				    // Calculate the location
-				    const T xPos = (T)ix * scaleJ + xJOff;
-					const T yPos = (T)iy * scaleJ + yJOff;
-//					const T zPos = (T)0.;
-//					const T wPos = (T)0.;
-
-
-					// Calculate the Mandelbrot index for the current location
-					switch (julia4D) {
-						case 0:
-							m = CalcJulia<T>(xPos, yPos);
-							break;
-						case 1:
-						case 2:
-							T dist = 6.0;
-							T step = 0.009;
-
-							T ox = (T)ix * scaleJ + xJOff;
-							T oy = (T)iy * scaleJ + yJOff;
-							T oz = - 3.0;
-							T ow = 0.0;
-							T dx = sin( 0.7 * step * ( ix - (imageW/2.)) / ((float) imageW) );
-							T dy = sin( 0.7 * step * ( iy - (imageH/2.)) / ((float) imageW) );
-							T dz = step;
-							T dw = 0.;
-							rotate4(&ox,&oy,&oz,&ow);
-							rotate4(&dx,&dy,&dz,&dw);
-							int nb = (dist/step);
-							if (julia4D==1)
-								m = CloudJulia4D<T>(ox,oy,oz,ow,dx,dy,dz,dw,&r,&g,&b,nb);
-							if (julia4D==2)
-							{
-								m = SolidJulia4D<T>(ix,iy,imageW,imageH,scaleJ,&r,&g,&b,xJOff,yJOff);
-							}
-							break;
-					}
-    			}
-//				m = blockIdx.x;         // uncomment to see scheduling order
-				m = m > 0 ? crn - m : 0;
-
-				// Convert the Mandelbrot index into a color
-				uchar4 color;
-
-				if ((julia4D)&&((ix >= imageW / julia) || (iy >= imageH / julia))) {
-					color.x = r;
-					color.y = g;
-					color.z = b;
-				} else
-				{
-					if (m) {
-						m += animationFrame;
-						color.x = m * colors.x;
-						color.y = m * colors.y;
-						color.z = m * colors.z;
-					} else {
-						color.x = 0;
-						color.y = 0;
-						color.z = 0;
-					}
-				}
-
-				// Output the pixel
-				int frame1 = frame + 1;
-				int frame2 = frame1 / 2;
-				dst[pixel].x = (pixelColor.x * frame + color.x + frame2) / frame1;
-				dst[pixel].y = (pixelColor.y * frame + color.y + frame2) / frame1;
-				dst[pixel].z = (pixelColor.z * frame + color.z + frame2) / frame1;
-		    }
-        }
-    }
-
-}*/ // Julia4D1
 
 // The host CPU Mandebrot thread spawner
 void RunJulia4Drepart(uchar4 *dst, const int imageW, const int imageH,
@@ -355,31 +236,6 @@ void RunJulia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 	}
     cutilCheckMsg("Julia4D0_sm13 kernel execution failed.\n");
 } // RunJulia4D0
-
-// The host CPU Mandebrot thread spawner
-/*void RunJulia4D1_sm13(uchar4 *dst, const int imageW, const int imageH, const double xOff, const double yOff, const double scale, const double xJOff, const double yJOff, const double scaleJ, const uchar4 colors, const int frame, const int animationFrame, const int mode, const int numSMs, const int julia, const int julia4D)
-{
-    dim3 threads(BLOCKDIM_X, BLOCKDIM_Y);
-    dim3 grid(iDivUp(imageW, BLOCKDIM_X), iDivUp(imageH, BLOCKDIM_Y));
-
-    // zero block counter
-    unsigned int hBlockCounter = 0;
-    cutilSafeCall( cudaMemcpyToSymbol(blockCounter, &hBlockCounter, sizeof(unsigned int), 0, cudaMemcpyHostToDevice ) );
-
-	int numWorkUnit = numSMs;
-	
-	switch(mode) {
-	default:
-    case 0:
-		Julia4D1_sm13<float><<<numWorkUnit, threads>>>(dst, imageW, imageH, (float)xOff, (float)yOff, (float)scale, (float)xJOff, (float)yJOff, (float)scaleJ, colors, frame, animationFrame, grid.x, grid.x*grid.y, julia, julia4D);
-        break;
-    case 1:
-		Julia4D1_sm13<double><<<numWorkUnit, threads>>>(dst, imageW, imageH, xOff, yOff, scale, xJOff, yJOff, scaleJ, colors, frame, animationFrame, grid.x, grid.x*grid.y, julia, julia4D);
-        break;
-    }
-
-    cutilCheckMsg("Julia4D1_sm13 kernel execution failed.\n");
-}*/ // RunMandelbrot1
 
 
 // check if we're running in emulation mode
