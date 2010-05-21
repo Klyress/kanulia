@@ -446,10 +446,7 @@ __device__ inline int CalcJulia(const T xPos, const T yPos)
 template<class T>
 __device__ inline int CalcJulia4D(const T xPos, const T yPos, const T zPos, const T wPos)
 {
-    T x = xPos;
-    T y = yPos;
-    T z = zPos;
-    T w = wPos;
+    T x = xPos;T y = yPos;T z = zPos;T w = wPos;
     T xx = x * x;
     T yy = y * y;
     T zz = z * z;
@@ -476,17 +473,14 @@ __device__ inline int CalcJulia4D(const T xPos, const T yPos, const T zPos, cons
 template<class T>
 __device__ inline int CalcJulia4Dhue(const T xPos, const T yPos, const T zPos, const T wPos, float *hue)
 {
-    T x = xPos;
-    T y = yPos;
-    T z = zPos;
-    T w = wPos;
+    T x = xPos;T y = yPos;T z = zPos;T w = wPos;
     T xx = x * x;
     T yy = y * y;
     T zz = z * z;
     T ww = w * w;
 
     int i = crn;
-	int huenb = 2;
+	int huenb = 7;
 
 	if (huenb>i) huenb = i;
 
@@ -510,6 +504,39 @@ __device__ inline int CalcJulia4Dhue(const T xPos, const T yPos, const T zPos, c
         ww = w * w;
     } while (i);
     return 0;
+} // CalcJulia4Dhue
+
+template<class T>
+__device__ inline int CalcJulia4Dcore(const T xPos, const T yPos, const T zPos, const T wPos, float *hue)
+{
+    T x = xPos;T y = yPos;T z = zPos;T w = wPos;
+    T xx = x * x;
+    T yy = y * y;
+    T zz = z * z;
+    T ww = w * w;
+
+    int i = 0;
+
+    do {
+		i++;
+
+		if (xx + yy + zz + ww > T(4.0))
+		{
+			*hue =(float)(i)/256.0;
+			while (*hue>1.0) *hue -= 1.0;
+			return i;
+		}
+        z = x * z * T(2.0) + zJS;
+        w = x * w * T(2.0) + wJS;
+        y = x * y * T(2.0) + yJS;
+        x = xx - yy - zz - ww + xJS;
+        xx = x * x;
+        yy = y * y;
+        zz = z * z;
+        ww = w * w;
+    } while (i<=256);
+	*hue = 0.3;
+    return i;
 } // CalcJulia4Dhue
 
 
@@ -568,18 +595,10 @@ __device__ int SolidJulia4D(const int ix, const int iy, const int d_imageW, cons
 	rotate4(&dx,&dy,&dz,&dw);
 	int nb = (dist/step);
 
-	T x1 = step;
-	T y1 = 0.0;
-	T z1 = 0.0;
-	T w1 = 0.0;
-	T x2 = 0.0;
-	T y2 = step;
-	T z2 = 0.0;
-	T w2 = 0.0;
-	T x3 = 0.0;
-	T y3 = 0.0;
-	T z3 = 0.0;
-	T w3 = 1.0;
+	T x0 = 0.0;T y0 = 1.0;T z0 = 0.0;T w0 = 0.0;// normal is the secant plan's normal
+	T x1 = step;T y1 = 0.0;T z1 = 0.0;T w1 = 0.0;
+	T x2 = 0.0;T y2 = step;T z2 = 0.0;T w2 = 0.0;
+	T x3 = 0.0;T y3 = 0.0;T z3 = 0.0;T w3 = 1.0;
 
 	rotate4(&x1,&y1,&z1,&w1);
 	rotate4(&x2,&y2,&z2,&w2);
@@ -597,109 +616,142 @@ __device__ int SolidJulia4D(const int ix, const int iy, const int d_imageW, cons
 	T ddw=dw;
 	int c=nb;
 	bool out = true; // if ray is out main c=0
+	bool hit = false; // if the ray hit the "inside"
 	do {
-		x += dx;y += dy;z += dz;w += dw;
-
-		if (CalcJulia4D(x, y, z, w)==0)
+		// if inside empty aera
+		if ( y < 0.)
 		{
-			// ray is not out. we ll see if normal is out now
-			out=false;
-			c=12;
-
-			// for normal 3D
-			x1=x + x1;
-			y1=y + y1;
-			z1=z + z1;
-			w1=w + w1;
-
-			x2=x + x2;
-			y2=y + y2;
-			z2=z + z2;
-			w2=w + w2;
-
-			ddx=dx;ddy=dy;ddz=dz;ddw=dw;
-			T d1x=dx;T d1y=dy;T d1z=dz;T d1w=dw;
-			T d2x=dx;T d2y=dy;T d2z=dz;T d2w=dw;
-			int in=0,in1=0,in2=0;//,in3=0;
-
-			// place les 2 rayons pour les normales contre la forme
-			if (CalcJulia4D(x1, y1, z1, w1)==0)
+			// then if going away
+			if (dy < 0.)
 			{
-				do {
-					x1 -= d1x;y1 -= d1y;z1 -= d1z;w1 -= d1w;
-					if (x1*x1 + y1*y1 + z1*z1 + w1*w1 > T(4.0)) out=true;
-				} while ((CalcJulia4D(x1, y1, z1, w1) == 0) && (!out) );
-			} else {
-				do {
-					x1 += d1x;y1 += d1y;z1 += d1z;w1 += d1w;
-					if (x1*x1 + y1*y1 + z1*z1 + w1*w1 > T(4.0)) out=true;
-				} while ((CalcJulia4D(x1, y1, z1, w1) != 0) && (!out) );
+				// go away
+				x = 4.0;y = 0.;z = 0.;w = 0.;
+				c = 0;
 			}
-			if (CalcJulia4D(x2, y2, z2, w2)==0)
+			else
 			{
-				do {
-					x2 -= d2x;y2 -= d2y;z2 -= d2z;w2 -= d2w;
-					if (x2*x2 + y2*y2 + z2*z2 + w2*w2 > T(4.0)) out=true;
-				} while ((CalcJulia4D(x2, y2, z2, w2) == 0) && (!out) );
-			} else {
-				do {
-					x2 += d2x;y2 += d2y;z2 += d2z;w2 += d2w;
-					if (x2*x2 + y2*y2 + z2*z2 + w2*w2 > T(4.0)) out=true;
-				} while ((CalcJulia4D(x2, y2, z2, w2) != 0) && (!out) );
+				// hit the surface
+				T dhit = -y/dy;
+				x += dx * dhit;
+				y += dy * dhit;
+				z += dz * dhit;
+				w += dw * dhit;
+				if (CalcJulia4Dcore(x,  y,  z,  w, &hue)>=crn)
+				{
+					c=0; // stop, we hit the inside
+					hit = true;
+					out = false;
+				}
 			}
+		}
+		else
+		{
+			x += dx;y += dy;z += dz;w += dw;
 
-			if (!out) {
-				do {
-					in  = CalcJulia4Dhue(x,  y,  z,  w, &hue);
-					in1 = CalcJulia4D(x1, y1, z1, w1);
-					in2 = CalcJulia4D(x2, y2, z2, w2);
-					if (in==0) {
-						x -= ddx;y -= ddy;z -= ddz;w -= ddw;
-					} else {
-						x += ddx;y += ddy;z += ddz;w += ddw;
-					}
-					if (in1==0) {
+			if (CalcJulia4D(x, y, z, w)==0)
+			{
+				// ray is not out. we ll see if normal is out now
+				out=false;
+				c=12;
+
+				// for normal 3D
+				x1=x + x1;
+				y1=y + y1;
+				z1=z + z1;
+				w1=w + w1;
+
+				x2=x + x2;
+				y2=y + y2;
+				z2=z + z2;
+				w2=w + w2;
+
+				ddx=dx;ddy= dy;ddz=dz;ddw=dw;
+				T d1x=dx;T d1y=dy;T d1z=dz;T d1w=dw;
+				T d2x=dx;T d2y=dy;T d2z=dz;T d2w=dw;
+				int in=0,in1=0,in2=0;//,in3=0;
+
+				// place les 2 rayons pour les normales contre la forme
+				if (CalcJulia4D(x1, y1, z1, w1)==0)
+				{
+					do {
 						x1 -= d1x;y1 -= d1y;z1 -= d1z;w1 -= d1w;
-					} else {
+						if (x1*x1 + y1*y1 + z1*z1 + w1*w1 > T(4.0)) out=true;
+					} while ((CalcJulia4D(x1, y1, z1, w1) == 0) && (!out) );
+				} else {
+					do {
 						x1 += d1x;y1 += d1y;z1 += d1z;w1 += d1w;
-					}
-					if (in2==0) {
+						if (x1*x1 + y1*y1 + z1*z1 + w1*w1 > T(4.0)) out=true;
+					} while ((CalcJulia4D(x1, y1, z1, w1) != 0) && (!out) );
+				}
+				if (CalcJulia4D(x2, y2, z2, w2)==0)
+				{
+					do {
 						x2 -= d2x;y2 -= d2y;z2 -= d2z;w2 -= d2w;
-					} else {
+						if (x2*x2 + y2*y2 + z2*z2 + w2*w2 > T(4.0)) out=true;
+					} while ((CalcJulia4D(x2, y2, z2, w2) == 0) && (!out) );
+				} else {
+					do {
 						x2 += d2x;y2 += d2y;z2 += d2z;w2 += d2w;
-					}
-					ddx /= 2.0;ddy /= 2.0;ddz /= 2.0;ddw /= 2.0;
-					d1x /= 2.0;d1y /= 2.0;d1z /= 2.0;d1w /= 2.0;
-					d2x /= 2.0;d2y /= 2.0;d2z /= 2.0;d2w /= 2.0;
-				} while (c-->0);
-			} else c=1;
+						if (x2*x2 + y2*y2 + z2*z2 + w2*w2 > T(4.0)) out=true;
+					} while ((CalcJulia4D(x2, y2, z2, w2) != 0) && (!out) );
+				}
+
+				if (!out) {
+					do {
+						in  = CalcJulia4Dhue(x,  y,  z,  w, &hue);
+						in1 = CalcJulia4D(x1, y1, z1, w1);
+						in2 = CalcJulia4D(x2, y2, z2, w2);
+						if (in==0) {
+							x -= ddx;y -= ddy;z -= ddz;w -= ddw;
+						} else {
+							x += ddx;y += ddy;z += ddz;w += ddw;
+						}
+						if (in1==0) {
+							x1 -= d1x;y1 -= d1y;z1 -= d1z;w1 -= d1w;
+						} else {
+							x1 += d1x;y1 += d1y;z1 += d1z;w1 += d1w;
+						}
+						if (in2==0) {
+							x2 -= d2x;y2 -= d2y;z2 -= d2z;w2 -= d2w;
+						} else {
+							x2 += d2x;y2 += d2y;z2 += d2z;w2 += d2w;
+						}
+						ddx /= 2.0;ddy /= 2.0;ddz /= 2.0;ddw /= 2.0;
+						d1x /= 2.0;d1y /= 2.0;d1z /= 2.0;d1w /= 2.0;
+						d2x /= 2.0;d2y /= 2.0;d2z /= 2.0;d2w /= 2.0;
+					} while (c-->0);
+				} else c=1;
+			}
 		}
 	} while (c-->0);
 
 	if (out) {
-		*r = 1.;
-		*g = 1.;
-		*b = 1.;
+		*r = 1;
+		*g = 1;
+		*b = 1;
 	} else {
-	    // computing vector
-		x1 -= x;y1 -= y;z1 -= z;w1 -= w;
-		x2 -= x;y2 -= y;z2 -= z;w2 -= w;
-		// vector product for normal
+		if (!hit)
+		{
+			// computing vector
+			x1 -= x;y1 -= y;z1 -= z;w1 -= w;
+			x2 -= x;y2 -= y;z2 -= z;w2 -= w;
+			// vector product for normal
 //	3D Normal in space vue
-//		T x0 = x1 * x2 - y1 * y2 - z1 * z2 - w1* w2;
-//		T y0 = x1 * y2 + y1 * x2 + z1 * w2 - w1* z2;
-//		T z0 = x1 * z2 + z1 * x2 + w1 * y2 - y1* w2;
-//		T w0 = x1 * w2 + w1 * x2 + y1 * z2 - z1* y2;
+//			x0 = x1 * x2 - y1 * y2 - z1 * z2 - w1* w2;
+//			y0 = x1 * y2 + y1 * x2 + z1 * w2 - w1* z2;
+//			z0 = x1 * z2 + z1 * x2 + w1 * y2 - y1* w2;
+//			w0 = x1 * w2 + w1 * x2 + y1 * z2 - z1* y2;
 //	4D Normal
-		T x0 = y1*(w2*z3-z2*w3)+y2*(z1*w3-w1*z3)+y3*(w1*z2-z1*w2);
-		T y0 = x1*(z2*w3-w2*z3)+x2*(w1*z3-z1*w3)+x3*(z1*w2-w1*z2);
-		T z0 = x1*(w2*y3-y2*w3)+x2*(y1*w3-w1*y3)+x3*(w1*y2-y1*w2);
-		T w0 = x1*(y2*z3-z2*y3)+x2*(z1*y3-y1*z3)+x3*(y1*z2-z1*y2);
+			x0 = y1*(w2*z3-z2*w3)+y2*(z1*w3-w1*z3)+y3*(w1*z2-z1*w2);
+			y0 = x1*(z2*w3-w2*z3)+x2*(w1*z3-z1*w3)+x3*(z1*w2-w1*z2);
+			z0 = x1*(w2*y3-y2*w3)+x2*(y1*w3-w1*y3)+x3*(w1*y2-y1*w2);
+			w0 = x1*(y2*z3-z2*y3)+x2*(z1*y3-y1*z3)+x3*(y1*z2-z1*y2);
 //	3D Normal in space xyz
-//		T x0 = y1 * z2 - z1 * y2;
-//		T y0 = z1 * x2 - x1 * z2;
-//		T z0 = x1 * y2 - y1 * x2;
-//		T w0 = 0.;
+//			x0 = y1 * z2 - z1 * y2;
+//			y0 = z1 * x2 - x1 * z2;
+//			z0 = x1 * y2 - y1 * x2;
+//			w0 = 0.;
+		}
 
 		// Normalisation
 		T nd=sqrt(dx*dx+dy*dy+dz*dz+dw*dw);
@@ -731,7 +783,10 @@ __device__ int SolidJulia4D(const int ix, const int iy, const int d_imageW, cons
 		anr *= 9.;
 		if ( anr > 1. ) anr=1.;
 		T li = anl*0.7+0.1;
-		HSL2RGB(hue, 0.6, li + (1. - li)*anr*anr, r, g, b);
+		if (!hit)
+			HSL2RGB(hue, 0.6, li + (1. - li)*anr*anr, r, g, b);
+		else
+			HSL2RGB(hue, 0.6, 0.5, r, g, b);
 		//+(anr*anr*anr)/3.
 	}
 	return out;

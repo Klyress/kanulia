@@ -65,7 +65,7 @@ int crunch = 10;
 int julia = 4;
 
 // Start with
-int julia4D = 0;
+int julia4D = 2;
 // Angle for julia4D view
 float anglexw = 0.;
 float angleyw = 0.;
