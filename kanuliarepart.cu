@@ -92,7 +92,7 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 				{
 					seedre = true; 
 				}
-				if (abs(zJS-xPos)+abs(wJS-yPos) < 2.1 * scale * julia )
+				if (julia4D&&(abs(zJS-xPos)+abs(wJS-yPos) < 2.1 * scale * julia ))
 				{
 					seedim = true; 
 				}
