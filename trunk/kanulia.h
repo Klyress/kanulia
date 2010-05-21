@@ -25,8 +25,13 @@ extern "C" void RunJulia4Drepart(uchar4 *dst, const int imageW, const int imageH
 					const double xJOff, const double yJOff, const double scaleJ,
 					const float xblur, const float yblur, // blur coeff for julia 4D
 					const uchar4 colors, const int frame, const int animationFrame, const int mode, const int numSMs, const int julia, const int julia4D);
-//extern "C" void RunJulia4D1_sm13(uchar4 *dst, const int imageW, const int imageH, const double xOff, const double yOff, const double scale, const double xJOff, const double yJOff, const double scaleJ, const uchar4 colors, const int frame, const int animationFrame, const int mode, const int numSMs, const int julia, const int julia4D);
 
+__device__ inline void HSL2RGB(float h, const float sl, const float ll, int *rc, int *gc, int *bc);
+
+template<class T>
+__device__ inline int CalcJulia4Dhue(const T xPos, const T yPos, const T zPos, const T wPos, float *hue);
+
+					
 extern "C" int inEmulationMode();
 
 template<class T> __device__ inline void rotate4(T *px, T *py, T *pz, T *pw);
