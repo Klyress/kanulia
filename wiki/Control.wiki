@@ -34,11 +34,16 @@ in the lower left corner
 
 *left clic* set the real seed point
 
-*shift left clic* set the imaginary seed point
-
 *middle clic* travel the real seed point
 
-*shift middle clic* travel the real seed point
+=== Imaginary Mandelbrot selection zone ===
+in the lower right corner
+
+*left clic* set the imaginary seed point
+
+*middle clic* travel the imaginary seed point
+
+
 
 === julia 2D ===
 
