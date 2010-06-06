@@ -535,9 +535,41 @@ __device__ inline int CalcJulia4Dcore(const T xPos, const T yPos, const T zPos, 
         zz = z * z;
         ww = w * w;
     } while (i<=256);
-	*hue = 0.3;
+	*hue = 0.05;
     return i;
-} // CalcJulia4Dhue
+} // CalcJulia4Dcore
+
+template<class T>
+__device__ inline int CalcMandel4Dcore(const T xPos, const T yPos, const T zPos, const T wPos, float *hue)
+{
+    T x = 0.;T y = 0.;T z = 0./*zJS*/;T w = 0./*wJS*/;
+    T xx = x * x;
+    T yy = y * y;
+    T zz = z * z;
+    T ww = w * w;
+
+    int i = 0;
+
+    do {
+		i++;
+
+		if (xx + yy + zz + ww > T(4.0))
+		{
+			*hue =(float)(i)/256.0;
+			while (*hue>1.0) *hue -= 1.0;
+			return i;
+		}
+        z = x * z * T(2.0) + zPos;
+        w = x * w * T(2.0) + wPos;
+        y = x * y * T(2.0) + yPos;
+        x = xx - yy - zz - ww + xPos;
+        xx = x * x;
+        yy = y * y;
+        zz = z * z;
+        ww = w * w;
+    } while (i<=256);
+    return i;
+} // CalcMandel4Dcore
 
 
 // The core Julia CUDA GPU calculation function
