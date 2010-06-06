@@ -50,7 +50,7 @@ __device__ unsigned int blockCounter;   // global counter, initialized to zero b
 
 template<class T>
 __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
- const T xOff, const T yOff, const T scale,
+ const T xOff, const T yOff, const T zOff, const T wOff, const T scale, const T scalei,
  const T xJOff, const T yJOff, const T scaleJ,
  const float xblur, const float yblur,
  const uchar4 colors, const int frame,
@@ -92,18 +92,31 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 				{
 					seedre = true; 
 				}
-				if (julia4D&&(abs(zJS-xPos)+abs(wJS-yPos) < 2.1 * scale * julia ))
+				if (!seedre)
+				{
+					float hue;
+//					m = CalcMandelbrot<T>(xPos , yPos);
+					m = CalcMandel4Dcore<T>(xPos,  yPos,  zJS,  wJS, &hue);
+					if (m<=256) HSL2RGB(hue, 0.6, 0.5, &r, &g, &b);
+				}
+    		} else if (julia4D&&((imageW - ix < imageW / julia) && (iy < imageH / julia))) {
+			    // Calculate the location
+			    const T zPos = (T)(imageW - ix) * scalei * julia + zOff;
+				const T wPos = (T)iy           * scalei * julia  + wOff;
+
+				// Calculate the Mandelbrot index for the current location
+				if (abs(zJS-zPos)+abs(wJS-wPos) < 2.1 * scalei * julia )
 				{
 					seedim = true; 
 				}
-				if (!(seedre||seedim))
+				if (!seedim)
 				{
 					float hue;
-//					m = CalcMandelbrot<T>(xPos, yPos);
-					m = CalcJulia4Dhue<T>(xPos,  yPos,  zJS,  wJS, &hue);
-					HSL2RGB(hue, 0.6, 0.5, &r, &g, &b);
+//					m = CalcMandelbrot<T>(zPos , wPos);
+					m = CalcMandel4Dcore<T>(xJS,  yJS,  zPos,  wPos, &hue);
+					if (m<=256) HSL2RGB(hue, 0.6, 0.5, &r, &g, &b);
 				}
-    		} else {
+			} else {
 			    // Calculate the location
 			    const T xPos = (T)ix * scaleJ + xJOff;
 				const T yPos = (T)iy * scaleJ + yJOff;
@@ -149,21 +162,12 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 				color.z = b;
 			} else
 			{
-				if (seedim)
-				{
-					color.x = 250;
-					color.y = 150;
-					color.z = 150;
-				}
-				if (seedre)
+				if (seedim||seedre)
 				{
 					color.x = 150;
 					color.y = 250;
 					color.z = 250;
-				}
-				
-				if (!(seedre||seedim))
-				{
+				} else {
 					color.x = r;
 					color.y = g;
 					color.z = b;
@@ -203,7 +207,8 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 
 // The host CPU Mandebrot thread spawner
 void RunJulia4Drepart(uchar4 *dst, const int imageW, const int imageH,
- const double xOff, const double yOff, const double scale,
+ const double xOff, const double yOff, const double zOff, const double wOff,
+ const double scale, const double scalei,
  const double xJOff, const double yJOff, const double scaleJ,
  const float xblur, const float yblur,
  const uchar4 colors, const int frame, const int animationFrame, const int mode, const int numSMs, const int julia, const int julia4D)
@@ -221,14 +226,14 @@ void RunJulia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 	default:
 	case 0:
 	    Julia4Drepart<float><<<numWorkUnit, threads>>>(dst, imageW, imageH,
-						(float)xOff, (float)yOff, (float)scale,
+						(float)xOff, (float)yOff, (float)zOff, (float)wOff, (float)scale, (float)scalei,
 						(float)xJOff, (float)yJOff, (float)scaleJ,
 						xblur, yblur,
 						colors, frame, animationFrame, grid.x, grid.x*grid.y, julia, julia4D);
 	    break;
 	case 1:
 		Julia4Drepart<double><<<numWorkUnit, threads>>>(dst, imageW, imageH,
-						xOff, yOff, scale,
+						xOff, yOff, zOff, wOff, scale, scalei,
 						xJOff, yJOff, scaleJ,
 						xblur, yblur,
 						colors, frame, animationFrame, grid.x, grid.x*grid.y, julia, julia4D);

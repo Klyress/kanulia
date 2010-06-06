@@ -79,7 +79,10 @@ float vanglexz = 0.;
 // Starting position and scale
 double xOff = -0.5; // x position of view in the mandelbro set
 double yOff = 0.0;
+double zOff = 0.0;
+double wOff = 0.0;
 double scale = 3.2;
+double scalei = 3.2;
 
 // Starting stationary position and scale motion
 double xdOff = 0.0;
@@ -309,9 +312,12 @@ void displayFunc(void)
             GetSample(pass & 127, xs, ys);
 
             // Get the pixel scale and offset
-            double s = scale / (float)imageW;
-            double x = (xs - (double)imageW * 0.5f) * s + xOff;
-            double y = (ys - (double)imageH * 0.5f) * s + yOff;
+            double s  = scale  / (float)imageW;
+            double si = scalei / (float)imageW;
+            double x = (xs - (double)imageW * 0.5f) * s  + xOff;
+            double y = (ys - (double)imageH * 0.5f) * s  + yOff;
+            double z = (xs - (double)imageW * 0.5f) * si + zOff;
+            double w = (ys - (double)imageH * 0.5f) * si + wOff;
             // same for Julia
 			double sj = scaleJ / (float)imageW;
 			double xj;
@@ -333,7 +339,7 @@ void displayFunc(void)
 //			else
 				RunJulia4Drepart(d_dst, // destination buffer
 					imageW, imageH, // windows size
-					x, y, s, xj, yj, sj, // seed point and scale for mandel brod and julia
+					x, y, z, w, s, si, xj, yj, sj, // seed point and scale for mandel brod and julia
 					( 2.0 * xs ) - 1.0, ( 2.0 * ys ) - 1.0 , // blur modification
 					colors, pass++, // color palette, and pass number
 					animationFrame, precisionMode,
@@ -605,21 +611,22 @@ void mouseFunc(int button, int state, int x, int y)
 		// in the mandelbro select
 		if ((x < imageW / julia) && (y  > imageH - imageH / julia))
 		{
-			if (modifiers & GLUT_ACTIVE_SHIFT)
-			{ // imaginary seed point
-				StepOffim = 1.;
-				zJSOff = xOff + ( x - (double) ( imageW / julia ) / 2. ) * ( scale / (double) (imageW / julia) );
-				wJSOff = yOff - ( y - (double) ( imageH - imageH / (2 * julia) ) ) * ( scale / (double) (imageW / julia) );
-			}
-			else
-			{ // real seed point
-				StepOffre = 1.;
-				xJSOff = xOff + ( x - (double) ( imageW / julia ) / 2. ) * ( scale / (double) (imageW / julia) );
-				yJSOff = yOff - ( y - (double) ( imageH - imageH / (2 * julia) ) ) * ( scale / (double) (imageW / julia) );
-			}
+			// real seed point
+			StepOffre = 1.;
+			xJSOff = xOff + ( x - (double) ( imageW / julia ) / 2. ) * ( scale / (double) (imageW / julia) );
+			yJSOff = yOff - ( y - (double) ( imageH - imageH / (2 * julia) ) ) * ( scale / (double) (imageW / julia) );
 
 			CUDA_SAFE_CALL(cudaMemcpyToSymbol("xJS", &xJSOff, sizeof(double)));
 			CUDA_SAFE_CALL(cudaMemcpyToSymbol("yJS", &yJSOff, sizeof(double)));
+	        pass = 0;
+		};
+		if (((imageW - x) < imageW / julia) && (y  > imageH - imageH / julia))
+		{
+			// imaginary seed point
+			StepOffim = 1.;
+			zJSOff = zOff + ( (imageW - x) - (double) ( imageW / julia ) / 2. )           * ( scalei / (double) (imageW / julia) );
+			wJSOff = wOff - (           y  - (double) ( imageH - imageH / (2 * julia) ) ) * ( scalei / (double) (imageW / julia) );
+
 			CUDA_SAFE_CALL(cudaMemcpyToSymbol("zJS", &zJSOff, sizeof(double)));
 			CUDA_SAFE_CALL(cudaMemcpyToSymbol("wJS", &wJSOff, sizeof(double)));
 	        pass = 0;
@@ -631,23 +638,24 @@ void mouseFunc(int button, int state, int x, int y)
 	    if ((state == GLUT_UP) && ((x < imageW / julia) && (y  > imageH - imageH / julia))) {
 			// printf("Middle Clicked %3.2f %3.2f \n" , ( x - (double) ( imageH ) / 2. ) , ( y - (double) ( imageH ) / 2. ) );
 			
-			if (modifiers & GLUT_ACTIVE_SHIFT)
-			{
-				OrizJSOff = zJSOff;
-				OriwJSOff = wJSOff;
-				DeszJSOff = xOff + ( x - (double) ( imageW / julia ) / 2. ) * ( scale / (double) (imageW / julia) );
-				DeswJSOff = yOff - ( y - (double) ( imageH - imageH / (2 * julia) ) ) * ( scale / (double) (imageW / julia) );
-				StepOffim = 0.;
-			}
-			else
-			{
-				OrixJSOff = xJSOff;
-				OriyJSOff = yJSOff;
-				DesxJSOff = xOff + ( x - (double) ( imageW / julia ) / 2. ) * ( scale / (double) (imageW / julia) );
-				DesyJSOff = yOff - ( y - (double) ( imageH - imageH / (2 * julia) ) ) * ( scale / (double) (imageW / julia) );
-				StepOffre = 0.;
+			OrixJSOff = xJSOff;
+			OriyJSOff = yJSOff;
+			DesxJSOff = xOff + ( x - (double) ( imageW / julia ) / 2. )           * ( scale / (double) (imageW / julia) );
+			DesyJSOff = yOff - ( y - (double) ( imageH - imageH / (2 * julia) ) ) * ( scale / (double) (imageW / julia) );
+			StepOffre = 0.;
 
-			}
+	        pass = 0;
+		}
+		// in the mandelbro select button released
+	    if ((state == GLUT_UP) && (((imageW - x) < imageW / julia) && (y  > imageH - imageH / julia))) {
+			// printf("Middle Clicked %3.2f %3.2f \n" , ( x - (double) ( imageH ) / 2. ) , ( y - (double) ( imageH ) / 2. ) );
+			
+			OrizJSOff = zJSOff;
+			OriwJSOff = wJSOff;
+			DeszJSOff = zOff + ( (imageW - x) - (double) ( imageW / julia ) / 2. )           * ( scalei / (double) (imageW / julia) );
+			DeswJSOff = wOff - (           y  - (double) ( imageH - imageH / (2 * julia) ) ) * ( scalei / (double) (imageW / julia) );
+			StepOffim = 0.;
+			
 	        pass = 0;
 		}
         middleClicked = !middleClicked;
@@ -674,6 +682,11 @@ void mouseFunc(int button, int state, int x, int y)
 				scale /= 1.1f;
 				xOff += ( x - (double) ( imageW / julia ) / 2. ) * 0.1 * ( scale / (double) (imageW / julia) );
 				yOff -= ( y - (double) ( imageH - imageH / (2* julia) ) ) * 0.1 * ( scale / (double) (imageW / julia) );
+			} else if (((imageW - x) < imageW / julia) && (y  > imageH - imageH / julia))
+			{
+				scalei /= 1.1f;
+				zOff += ( (imageW - x) - (double) ( imageW / julia ) / 2. )          * 0.1 * ( scalei / (double) (imageW / julia) );
+				wOff -= (           y  - (double) ( imageH - imageH / (2* julia) ) ) * 0.1 * ( scalei / (double) (imageW / julia) );
 			} else {
 				scaleJ /= 1.1f;
 				xJOff += ( x - (double) ( imageW ) / 2. ) * 0.1 * ( scaleJ / (double) imageW );
@@ -689,6 +702,11 @@ void mouseFunc(int button, int state, int x, int y)
 				xOff -= ( x - (double) ( imageW / julia ) / 2. ) * 0.1 * ( scale / (double) (imageW / julia) );
 				yOff += ( y - (double) ( imageH - imageH / (2 * julia) ) ) * 0.1 * ( scale / (double) (imageW / julia) );
 				scale *= 1.1f;
+			} else if (((imageW - x) < imageW / julia) && (y  > imageH - imageH / julia))
+			{
+				zOff -= ( (imageW - x) - (double) ( imageW / julia ) / 2. )           * 0.1 * ( scalei / (double) (imageW / julia) );
+				wOff += (           y  - (double) ( imageH - imageH / (2 * julia) ) ) * 0.1 * ( scalei / (double) (imageW / julia) );
+				scalei *= 1.1f;
 			} else {
 				xJOff -= ( x - (double) ( imageW ) / 2. ) * 0.1 * ( scaleJ / (double) imageW );
 				yJOff += ( y - (double) ( imageH ) / 2. ) * 0.1 * ( scaleJ / (double) imageW );
@@ -717,21 +735,17 @@ void motionFunc(int x, int y)
     if (leftClicked) {
 		if ((x < imageW / julia) && (y  > imageH - imageH / julia))
 		{
-			if (leftClicked && (modifiers & GLUT_ACTIVE_SHIFT))
-			{
-				zJSOff = xOff + ( x - (double) ( imageW / julia ) / 2.0 ) * ( scale / (double) (imageW / julia) );
-				wJSOff = yOff - ( y - (double) ( imageH - imageH / (2.0 * julia) ) ) * ( scale / (double) (imageW / julia) );
-				CUDA_SAFE_CALL(cudaMemcpyToSymbol("zJS", &zJSOff, sizeof(double)));
-				CUDA_SAFE_CALL(cudaMemcpyToSymbol("wJS", &wJSOff, sizeof(double)));
-			}
-			else
-			{
-				xJSOff = xOff + ( x - (double) ( imageW / julia ) / 2.0 ) * ( scale / (double) (imageW / julia) );
-				yJSOff = yOff - ( y - (double) ( imageH - imageH / (2.0 * julia) ) ) * ( scale / (double) (imageW / julia) );
-				CUDA_SAFE_CALL(cudaMemcpyToSymbol("xJS", &xJSOff, sizeof(double)));
-				CUDA_SAFE_CALL(cudaMemcpyToSymbol("yJS", &yJSOff, sizeof(double)));
-			}
-			
+			xJSOff = xOff + ( x - (double) ( imageW / julia ) / 2.0 ) * ( scale / (double) (imageW / julia) );
+			yJSOff = yOff - ( y - (double) ( imageH - imageH / (2.0 * julia) ) ) * ( scale / (double) (imageW / julia) );
+			CUDA_SAFE_CALL(cudaMemcpyToSymbol("xJS", &xJSOff, sizeof(double)));
+			CUDA_SAFE_CALL(cudaMemcpyToSymbol("yJS", &yJSOff, sizeof(double)));
+	        pass = 0;
+		} else if (((imageW - x) < imageW / julia) && (y  > imageH - imageH / julia))
+		{
+			zJSOff = zOff + ( (imageW - x) - (double) ( imageW / julia ) / 2.0 ) * ( scalei / (double) (imageW / julia) );
+			wJSOff = wOff - ( y - (double) ( imageH - imageH / (2.0 * julia) ) ) * ( scalei / (double) (imageW / julia) );
+			CUDA_SAFE_CALL(cudaMemcpyToSymbol("zJS", &zJSOff, sizeof(double)));
+			CUDA_SAFE_CALL(cudaMemcpyToSymbol("wJS", &wJSOff, sizeof(double)));
 	        pass = 0;
 		} else
 		{
@@ -1040,8 +1054,8 @@ int main(int argc, char **argv)
         scale = x;
     }
 
-    imageW = 800;
-	imageH = 600;
+    imageW = 1920;
+	imageH = 1200;
 
     colors.w = 0;
     colors.x = 3;
@@ -1093,17 +1107,6 @@ int main(int argc, char **argv)
     }
 
     printf("Starting GLUT main loop...\n");
-    printf("\n");
-    printf("Press [?] to print location and scale\n");
-    printf("Press [q] to exit\n");
-    printf("Press [r] to reset\n");
-    printf("Press [a] or [A] to animate the colors\n");
-    printf("Press [c] or [C] to change the colors\n");
-    printf("Press [d] or [D] to increase/decrease the detail\n");
-    printf("Press [j] or [J] to increase/decrease the mandel view\n");
-    printf("Left mouse button + drag = Scroll\n");
-    printf("Middle mouse button + drag = Zoom\n");
-    printf("Right mouse button = Menu\n");
     printf("\n");
 
     glutDisplayFunc(displayFunc);
