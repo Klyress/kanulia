@@ -53,12 +53,16 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
  const T xOff, const T yOff, const T zOff, const T wOff, const T scale, const T scalei,
  const T xJOff, const T yJOff, const T scaleJ,
  const float xblur, const float yblur,
+ const unsigned int gropix,
+ const unsigned int bloc, const unsigned int nbloc,
  const uchar4 colors, const int frame,
  const int animationFrame, const int gridWidth, const int numBlocks, const int julia, const int julia4D)
 {
     __shared__ unsigned int blockIndex;
     __shared__ unsigned int blockX, blockY;
-
+	
+	blockIndex=((numBlocks/nbloc)+1)*(bloc);
+	
     // loop until all blocks completed
     while(1) {
         if ((threadIdx.x==0) && (threadIdx.y==0)) {
@@ -71,11 +75,11 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
         __syncthreads();
 #endif
 
-        if (blockIndex >= numBlocks) break;  // finish
+        if (blockIndex >= ((numBlocks/nbloc)+1)*(bloc+1)) break;  // finish
 
         // process this block
-        const int ix = blockDim.x * blockX + threadIdx.x;
-        const int iy = blockDim.y * blockY + threadIdx.y;
+        const int ix = blockDim.x * blockX * gropix + threadIdx.x * gropix;
+        const int iy = blockDim.y * blockY * gropix + threadIdx.y * gropix;
 
 		int r = 0;int g = 0;int b = 0;
 		bool seedre = false;bool seedim = false;
@@ -190,7 +194,12 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 			int pixel = imageW * iy + ix;
 			if (frame == 0) {
 			    color.w = 0;
-			    dst[pixel] = color;
+				if (gropix==1)
+					dst[pixel] = color;
+				else
+					for (int i=0;i<gropix;i++) for (int j=0;j<gropix;j++)
+						if ((ix+i<imageW)&&(iy+j<imageH))
+							dst[pixel+i+imageW*j] = color;
 			} else {
 			    int frame1 = frame + 1;
 			    int frame2 = frame1 / 2;
@@ -211,10 +220,12 @@ void RunJulia4Drepart(uchar4 *dst, const int imageW, const int imageH,
  const double scale, const double scalei,
  const double xJOff, const double yJOff, const double scaleJ,
  const float xblur, const float yblur,
+ const unsigned int gropix,
+ const unsigned int bloc, const unsigned int nbloc,
  const uchar4 colors, const int frame, const int animationFrame, const int mode, const int numSMs, const int julia, const int julia4D)
 {
     dim3 threads(BLOCKDIM_X, BLOCKDIM_Y);
-    dim3 grid(iDivUp(imageW, BLOCKDIM_X), iDivUp(imageH, BLOCKDIM_Y));
+    dim3 grid(iDivUp(imageW/gropix, BLOCKDIM_X), iDivUp(imageH/(gropix*nbloc), BLOCKDIM_Y));
 
     // zero block counter
     unsigned int hBlockCounter = 0;
@@ -229,14 +240,16 @@ void RunJulia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 						(float)xOff, (float)yOff, (float)zOff, (float)wOff, (float)scale, (float)scalei,
 						(float)xJOff, (float)yJOff, (float)scaleJ,
 						xblur, yblur,
-						colors, frame, animationFrame, grid.x, grid.x*grid.y, julia, julia4D);
+						gropix, bloc, nbloc,
+						colors, frame, animationFrame, grid.x, (grid.x)*(grid.y), julia, julia4D);
 	    break;
 	case 1:
 		Julia4Drepart<double><<<numWorkUnit, threads>>>(dst, imageW, imageH,
 						xOff, yOff, zOff, wOff, scale, scalei,
 						xJOff, yJOff, scaleJ,
 						xblur, yblur,
-						colors, frame, animationFrame, grid.x, grid.x*grid.y, julia, julia4D);
+						gropix, bloc, nbloc,
+						colors, frame, animationFrame, grid.x, (grid.x)*(grid.y), julia, julia4D);
 		break;
 	}
     cutilCheckMsg("Julia4D0_sm13 kernel execution failed.\n");
