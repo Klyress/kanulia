@@ -112,6 +112,14 @@ double DeswJSOff = 0.;
 double StepOffre = 1.;
 double StepOffim = 1.;
 
+// Affichage bloc par bloc
+unsigned int bloc=0;
+unsigned int nbloc=1;
+
+// Affichage pixélisé de la julia
+unsigned int maxgropix = 16; // taille du bloc maximal pixelisé de calcul rapide
+unsigned int gropix = maxgropix; // taille du gros bloc pixelisé courant
+
 // Starting stationary position and scale motion for Julia
 double xJdOff = 0.0;
 double yJdOff = 0.0;
@@ -178,6 +186,15 @@ void AutoQATest()
     }
 }
 
+void newpic()
+{
+	pass = 0;
+	gropix = maxgropix;
+	bloc = 0;
+	nbloc=1;
+	for (int mx=maxgropix;mx/=2;mx>=2) nbloc++;
+}
+
 void computeFPS()
 {
     frameCount++;
@@ -239,7 +256,7 @@ void displayFunc(void)
 		CUDA_SAFE_CALL(cudaMemcpyToSymbol("yJS", &yJSOff, sizeof(double)));
 		StepOffre += 0.003;
 //		printf("StepOffre\n");
-	    pass = 0;
+		newpic();
 	}
 	if (StepOffim < 1.)
 	{
@@ -250,47 +267,47 @@ void displayFunc(void)
 		CUDA_SAFE_CALL(cudaMemcpyToSymbol("wJS", &wJSOff, sizeof(double)));
 		StepOffim += 0.003;
 //		printf("StepOffim\n");
-	    pass = 0;
+		newpic();
 	}
 	if (vanglexw != 0.)
 	{
 		anglexw += vanglexw;
-	    pass = 0;
+		newpic();
 		CUDA_SAFE_CALL(cudaMemcpyToSymbol("aanglexw", &anglexw, sizeof(float)));
 	}
 	if (vangleyw != 0.)
 	{
 		angleyw += vangleyw;
-	    pass = 0;
+		newpic();
 		CUDA_SAFE_CALL(cudaMemcpyToSymbol("aangleyw", &angleyw, sizeof(float)));
 	}
 	if (vanglexy != 0.)
 	{
 		anglexy += vanglexy;
-	    pass = 0;
+		newpic();
 		CUDA_SAFE_CALL(cudaMemcpyToSymbol("aanglexy", &anglexy, sizeof(float)));
 	}
 	if (vanglexz != 0.)
 	{
 		anglexz += vanglexz;
-	    pass = 0;
+		newpic();
 		CUDA_SAFE_CALL(cudaMemcpyToSymbol("aanglexz", &anglexz, sizeof(float)));
 	}
     if ((xdOff != 0.0) || (ydOff != 0.0)) {
         xOff += xdOff;
         yOff += ydOff;
 		printf("xdOff\n");
-        pass = 0;
+		newpic();
     }
     if (dscale != 1.0) {
         scale *= dscale;
 		printf("dscale\n");
-        pass = 0;
+		newpic();
     }
     if (animationStep) {
         animationFrame -= animationStep;
 		printf("animationStep\n");
-        pass = 0;
+		newpic();
     }
 
 #if RUN_TIMING
@@ -332,7 +349,7 @@ void displayFunc(void)
 				xj = (0.5f - (double)imageW * 0.5f) * sj + xJOff;
 				yj = (0.5f - (double)imageH * 0.5f) * sj + yJOff;
 			}
-				
+			
             // Run the mandelbrot generator
 //			if (pass && !startPass) // Use the adaptive sampling version when animating.
 //				RunJulia4D1_sm13(d_dst, imageW, imageH, x, y, s, xj, yj, sj, colors, pass++, animationFrame, precisionMode, numSMs, julia, julia4D);
@@ -341,14 +358,31 @@ void displayFunc(void)
 					imageW, imageH, // windows size
 					x, y, z, w, s, si, xj, yj, sj, // seed point and scale for mandel brod and julia
 					( 2.0 * xs ) - 1.0, ( 2.0 * ys ) - 1.0 , // blur modification
-					colors, pass++, // color palette, and pass number
+					gropix, bloc, nbloc,
+					colors, pass, // color palette, and pass number
 					animationFrame, precisionMode,
 					numSMs, julia, julia4D);
             cudaThreadSynchronize();
 
+			bloc++;			
+			if (bloc=nbloc)
+			{
+				if (gropix>1) gropix/=2;
+				bloc=0;				
+				nbloc=1;
+				for (int mx=maxgropix;mx/=2;mx>=2) nbloc++;
+			}
+			if (( gropix == 1 )&&(bloc==0)) pass++;
+
             // Estimate the total time of the frame if one more pass is rendered
-            timeEstimate = 0.001f * cutGetTimerValue(hTimer) * ((float)(pass + 1 - startPass) / (float)(pass - startPass));
-			printf("startpass=%d pass=%d  Estimate=%5.8f\n",startPass,pass,timeEstimate);
+            timeEstimate = 0.001f * cutGetTimerValue(hTimer) * ((float)(pass + 1 - startPass) / (float)((pass - startPass)?(pass-startPass):1));
+			printf("startpass=%d pass=%d M=%d gropix=%d blc= %d nblc=%d Estimate=%5.8f\n",startPass,pass,maxgropix,gropix,bloc,nbloc,timeEstimate);
+			// ajustage du maxgropix en fonction du temps mis pour calculer
+			if (gropix==maxgropix/2) // on est dans la pass la plus grossiere
+			{
+				if ((maxgropix>  1)&&(timeEstimate<1./60.)) maxgropix /= 2;
+				if ((maxgropix<128)&&(timeEstimate>1./16.)) maxgropix *= 2;
+			}
         } while ((pass < 128) && (timeEstimate < 1.0f / 60.0f) && !RUN_TIMING);
         cutilSafeCall(cudaGLUnmapBufferObject(gl_PBO));
 #if RUN_TIMING
@@ -443,7 +477,7 @@ void keyboardFunc(unsigned char k, int, int)
 			CUDA_SAFE_CALL(cudaMemcpyToSymbol("crn", &crunch, sizeof(int)));
             animationFrame = 0;
             animationStep = 0;
-            pass = 0;
+			newpic();
 			anglexw = 0.;
 			angleyw = 0.;
 			anglexy = 0.;
@@ -465,7 +499,7 @@ void keyboardFunc(unsigned char k, int, int)
                 colors.y = 5;
                 colors.z = 7;
             }
-            pass = 0;
+			newpic();
             break;
 
         case 'C':
@@ -479,7 +513,7 @@ void keyboardFunc(unsigned char k, int, int)
                 colors.y = 5;
                 colors.z = 7;
             }
-            pass = 0;
+			newpic();
             break;
 
         case 'a':
@@ -506,7 +540,7 @@ void keyboardFunc(unsigned char k, int, int)
             if (crunch < 0x4000) {
 				if ( crunch < 32 ) crunch += 1;
                 else crunch *= 2;
-                pass = 0;
+				newpic();
             }
             printf("detail = %d\n", crunch);
 			CUDA_SAFE_CALL(cudaMemcpyToSymbol("crn", &crunch, sizeof(int)));
@@ -516,7 +550,7 @@ void keyboardFunc(unsigned char k, int, int)
             if (crunch > 2) {
 				if ( crunch <= 32 ) crunch -= 1;
                 else crunch /= 2;
-                pass = 0;
+				newpic();
             }
             printf("detail = %d\n", crunch);
 			CUDA_SAFE_CALL(cudaMemcpyToSymbol("crn", &crunch, sizeof(int)));
@@ -525,47 +559,47 @@ void keyboardFunc(unsigned char k, int, int)
         case 'j':
             if (julia < 16) {
                 julia *= 2;
-                pass = 0;
-            }
+				newpic();
+			}
             printf("julia = %d\n", julia);
             break;
 
         case 'J':
             if (julia > 1) {
                 julia /= 2;
-                pass = 0;
+				newpic();
             }
             printf("julia = %d\n", julia);
             break;
 
         case '4':	// Left arrow key
 			xOff -= 0.05f * scale;
-            pass = 0;
+			newpic();
 		    break;
 
         case '8':	// Up arrow key
 			yOff += 0.05f * scale;
-            pass = 0;
+			newpic();
 		    break;
 
         case '6':	// Right arrow key
 			xOff += 0.05f * scale;
-            pass = 0;
+			newpic();
 		    break;
 
         case '2':	// Down arrow key
 			yOff -= 0.05f * scale;
-            pass = 0;
+			newpic();
 		    break;
 
         case '+':
 			scale /= 1.1f;
-            pass = 0;
+			newpic();
 		    break;
 
         case '-':
 			scale *= 1.1f;
-            pass = 0;
+			newpic();
 		    break;
 
 		case 'u':
@@ -618,7 +652,7 @@ void mouseFunc(int button, int state, int x, int y)
 
 			CUDA_SAFE_CALL(cudaMemcpyToSymbol("xJS", &xJSOff, sizeof(double)));
 			CUDA_SAFE_CALL(cudaMemcpyToSymbol("yJS", &yJSOff, sizeof(double)));
-	        pass = 0;
+			newpic();
 		};
 		if (((imageW - x) < imageW / julia) && (y  > imageH - imageH / julia))
 		{
@@ -629,7 +663,7 @@ void mouseFunc(int button, int state, int x, int y)
 
 			CUDA_SAFE_CALL(cudaMemcpyToSymbol("zJS", &zJSOff, sizeof(double)));
 			CUDA_SAFE_CALL(cudaMemcpyToSymbol("wJS", &wJSOff, sizeof(double)));
-	        pass = 0;
+			newpic();
 		};
 	}
 	// middle mouse button
@@ -644,7 +678,7 @@ void mouseFunc(int button, int state, int x, int y)
 			DesyJSOff = yOff - ( y - (double) ( imageH - imageH / (2 * julia) ) ) * ( scale / (double) (imageW / julia) );
 			StepOffre = 0.;
 
-	        pass = 0;
+			newpic();
 		}
 		// in the mandelbro select button released
 	    if ((state == GLUT_UP) && (((imageW - x) < imageW / julia) && (y  > imageH - imageH / julia))) {
@@ -656,7 +690,7 @@ void mouseFunc(int button, int state, int x, int y)
 			DeswJSOff = wOff - (           y  - (double) ( imageH - imageH / (2 * julia) ) ) * ( scalei / (double) (imageW / julia) );
 			StepOffim = 0.;
 			
-	        pass = 0;
+			newpic();
 		}
         middleClicked = !middleClicked;
 	}
@@ -692,7 +726,7 @@ void mouseFunc(int button, int state, int x, int y)
 				xJOff += ( x - (double) ( imageW ) / 2. ) * 0.1 * ( scaleJ / (double) imageW );
 				yJOff -= ( y - (double) ( imageH ) / 2. ) * 0.1 * ( scaleJ / (double) imageW );
 			};
-            pass = 0;
+			newpic();
 			printf("Wheel Up\n");
 		}
 		else if( button == GLUT_WHEEL_DOWN )
@@ -712,7 +746,7 @@ void mouseFunc(int button, int state, int x, int y)
 				yJOff += ( y - (double) ( imageH ) / 2. ) * 0.1 * ( scaleJ / (double) imageW );
 				scaleJ *= 1.1f;
 			};
-            pass = 0;
+			newpic();
 			printf("Wheel Down\n");
 		}
 	}
@@ -739,14 +773,14 @@ void motionFunc(int x, int y)
 			yJSOff = yOff - ( y - (double) ( imageH - imageH / (2.0 * julia) ) ) * ( scale / (double) (imageW / julia) );
 			CUDA_SAFE_CALL(cudaMemcpyToSymbol("xJS", &xJSOff, sizeof(double)));
 			CUDA_SAFE_CALL(cudaMemcpyToSymbol("yJS", &yJSOff, sizeof(double)));
-	        pass = 0;
+			newpic();
 		} else if (((imageW - x) < imageW / julia) && (y  > imageH - imageH / julia))
 		{
 			zJSOff = zOff + ( (imageW - x) - (double) ( imageW / julia ) / 2.0 ) * ( scalei / (double) (imageW / julia) );
 			wJSOff = wOff - ( y - (double) ( imageH - imageH / (2.0 * julia) ) ) * ( scalei / (double) (imageW / julia) );
 			CUDA_SAFE_CALL(cudaMemcpyToSymbol("zJS", &zJSOff, sizeof(double)));
 			CUDA_SAFE_CALL(cudaMemcpyToSymbol("wJS", &wJSOff, sizeof(double)));
-	        pass = 0;
+			newpic();
 		} else
 		{
 			if (leftClicked && (modifiers & GLUT_ACTIVE_SHIFT))
@@ -767,8 +801,7 @@ void motionFunc(int x, int y)
 				CUDA_SAFE_CALL(cudaMemcpyToSymbol("aanglexw", &anglexw, sizeof(float)));
 				CUDA_SAFE_CALL(cudaMemcpyToSymbol("aangleyw", &angleyw, sizeof(float)));
 			}
-			pass = 0;
-
+			newpic();
 
 			};
     } else {
@@ -789,7 +822,7 @@ void motionFunc(int x, int y)
 		} else {
 			anglexy -= fx*100.0;
 			anglexz -= fy*100.0;
-            pass = 0;
+			newpic();
 //			printf("Motion fx=%f fy=%f\n",fx,fy);
 //			printf("anglexy=%f anglexz=%f\n",anglexy,anglexz);
 			CUDA_SAFE_CALL(cudaMemcpyToSymbol("aanglexy", &anglexy, sizeof(float)));
@@ -811,7 +844,7 @@ void idleFunc()
 void precisionMenu(int i)
 {
 	precisionMode = i;
-    pass = 0;
+	newpic();
 }
 
 void mainMenu(int i)
@@ -822,7 +855,7 @@ void mainMenu(int i)
 			ShellExecute(0, "open", "http://code.google.com/p/kanulia/wiki/Control", 0, 0, 1);
 			break;		
 	}
-    pass = 0;
+	newpic();
 }
 
 void juliaMenu(int i)
@@ -857,7 +890,7 @@ void juliaMenu(int i)
 			break;
 
 	}
-    pass = 0;
+	newpic();
 }
 
 void colorMenu(int i)
@@ -907,7 +940,7 @@ void colorMenu(int i)
             }
 			break;
 	};
-    pass = 0;
+	newpic();
 }
 
 void initMenus()
@@ -999,7 +1032,7 @@ void reshapeFunc(int w, int h)
 	CUDA_SAFE_CALL(cudaMemcpyToSymbol("imgW", &imageW, sizeof(int)));
 	CUDA_SAFE_CALL(cudaMemcpyToSymbol("imgH", &imageH, sizeof(int)));
 
-    pass = 0;
+	newpic();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1054,8 +1087,8 @@ int main(int argc, char **argv)
         scale = x;
     }
 
-    imageW = 1920;
-	imageH = 1200;
+    imageW = 300;
+	imageH = 200;
 
     colors.w = 0;
     colors.x = 3;

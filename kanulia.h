@@ -25,6 +25,8 @@ extern "C" void RunJulia4Drepart(uchar4 *dst, const int imageW, const int imageH
 					const double scale, const double scalei,
 					const double xJOff, const double yJOff, const double scaleJ,
 					const float xblur, const float yblur, // blur coeff for julia 4D
+					const unsigned int gropix,
+					const unsigned int bloc, const unsigned int nbloc,
 					const uchar4 colors, const int frame, const int animationFrame, const int mode, const int numSMs, const int julia, const int julia4D);
 
 __device__ inline void HSL2RGB(float h, const float sl, const float ll, int *rc, int *gc, int *bc);
