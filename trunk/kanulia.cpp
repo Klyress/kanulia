@@ -192,7 +192,7 @@ void newpic()
 	gropix = maxgropix;
 	bloc = 0;
 	nbloc=1;
-	for (int mx=maxgropix;mx/=2;mx>=2) nbloc++;
+	for (int mx=maxgropix;mx/=2;mx>=1) nbloc++;
 }
 
 void computeFPS()
@@ -364,25 +364,27 @@ void displayFunc(void)
 					numSMs, julia, julia4D);
             cudaThreadSynchronize();
 
-			bloc++;			
-			if (bloc=nbloc)
-			{
-				if (gropix>1) gropix/=2;
-				bloc=0;				
-				nbloc=1;
-				for (int mx=maxgropix;mx/=2;mx>=2) nbloc++;
-			}
-			if (( gropix == 1 )&&(bloc==0)) pass++;
-
             // Estimate the total time of the frame if one more pass is rendered
             timeEstimate = 0.001f * cutGetTimerValue(hTimer) * ((float)(pass + 1 - startPass) / (float)((pass - startPass)?(pass-startPass):1));
 			printf("startpass=%d pass=%d M=%d gropix=%d blc= %d nblc=%d Estimate=%5.8f\n",startPass,pass,maxgropix,gropix,bloc,nbloc,timeEstimate);
+
 			// ajustage du maxgropix en fonction du temps mis pour calculer
-			if (gropix==maxgropix/2) // on est dans la pass la plus grossiere
+			if (gropix==maxgropix) // on est dans la pass la plus grossiere
 			{
 				if ((maxgropix>  1)&&(timeEstimate<1./60.)) maxgropix /= 2;
 				if ((maxgropix<128)&&(timeEstimate>1./16.)) maxgropix *= 2;
 			}
+			
+			bloc++;
+			if (bloc==nbloc)
+			{
+				if (gropix>1) gropix/=2;
+				bloc=0;				
+				nbloc=1;
+				for (int mx=maxgropix;mx/=2;mx>=1) nbloc++;
+			}
+			if (( gropix == 1 )&&(bloc==0)) pass++;
+
         } while ((pass < 128) && (timeEstimate < 1.0f / 60.0f) && !RUN_TIMING);
         cutilSafeCall(cudaGLUnmapBufferObject(gl_PBO));
 #if RUN_TIMING
