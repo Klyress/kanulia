@@ -28,6 +28,7 @@
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="1"
 			CharacterSet="2"
 			>
 			<Tool
@@ -116,6 +117,7 @@
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="0"
 			CharacterSet="2"
 			>
 			<Tool
@@ -535,6 +537,18 @@
 			</File>
 			<File
 				RelativePath="..\..\common\inc\rendercheck_gl.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Others"
+			>
+			<File
+				RelativePath=".\kanulia.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\kanulia.rc"
 				>
 			</File>
 		</Filter>
