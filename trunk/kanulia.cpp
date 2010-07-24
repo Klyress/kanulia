@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-//#include "Shellapi.h"
+#include "windows.h"
 
 #include <GL/glew.h>
 
@@ -188,7 +188,7 @@ void AutoQATest()
 
 void openHelp()
 {
-//	ShellExecute(0, "open", "http://code.google.com/p/kanulia/wiki/Control", 0, 0, 1);
+	ShellExecute(0, "open", "http://code.google.com/p/kanulia/wiki/Control", 0, 0, 1);
 /*	SHELLEXECUTEINFO	shellInfo = { 0 };
 
 	shellInfo.cbSize	= sizeof( shellInfo );
