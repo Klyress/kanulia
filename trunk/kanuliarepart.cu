@@ -61,8 +61,6 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
     __shared__ unsigned int blockIndex;
     __shared__ unsigned int blockX, blockY;
 	
-	blockIndex=((numBlocks/nbloc)+1)*(bloc);
-	
     // loop until all blocks completed
     while(1) {
         if ((threadIdx.x==0) && (threadIdx.y==0)) {
@@ -190,6 +188,10 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 				}
 			}
 
+			// activer pour voir le calcul progressif
+//			color.x += nbloc;
+//			color.y += bloc*20;
+					
 			// Output the pixel
 			int pixel = imageW * iy + ix;
 			if (frame == 0) {
@@ -225,10 +227,10 @@ void RunJulia4Drepart(uchar4 *dst, const int imageW, const int imageH,
  const uchar4 colors, const int frame, const int animationFrame, const int mode, const int numSMs, const int julia, const int julia4D)
 {
     dim3 threads(BLOCKDIM_X, BLOCKDIM_Y);
-    dim3 grid(iDivUp(imageW/gropix, BLOCKDIM_X), iDivUp(imageH/(gropix*nbloc), BLOCKDIM_Y));
+    dim3 grid(iDivUp(imageW/gropix, BLOCKDIM_X), iDivUp(imageH/(gropix), BLOCKDIM_Y));
 
     // zero block counter
-    unsigned int hBlockCounter = 0;
+    unsigned int hBlockCounter = (((grid.x)*(grid.y)/nbloc)+1)*(bloc);
     cutilSafeCall( cudaMemcpyToSymbol(blockCounter, &hBlockCounter, sizeof(unsigned int), 0, cudaMemcpyHostToDevice ) );
 
 	int numWorkUnit = numSMs;

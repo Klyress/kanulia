@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "windows.h"
+//#include "Shellapi.h"
 
 #include <GL/glew.h>
 
@@ -186,13 +186,29 @@ void AutoQATest()
     }
 }
 
+void openHelp()
+{
+//	ShellExecute(0, "open", "http://code.google.com/p/kanulia/wiki/Control", 0, 0, 1);
+/*	SHELLEXECUTEINFO	shellInfo = { 0 };
+
+	shellInfo.cbSize	= sizeof( shellInfo );
+	shellInfo.fMask		= SEE_MASK_NOCLOSEPROCESS | SEE_MASK_FLAG_NO_UI |
+	SEE_MASK_CLASSNAME;
+	shellInfo.lpFile	= "http://code.google.com/p/kanulia/wiki/Control";
+	shellInfo.nShow		= SW_SHOWNORMAL;
+	shellInfo.lpClass	= "htmlfile";		// "opennew" is not supported for HTTP class, only HTMLFile
+	shellInfo.lpVerb	= "opennew";		// open in a new window
+
+	ShellExecuteEx( &shellInfo );*/
+}
+
 void newpic()
 {
 	pass = 0;
 	gropix = maxgropix;
 	bloc = 0;
 	nbloc=1;
-	for (int mx=maxgropix;mx/=2;mx>=1) nbloc++;
+//	for (int mx=maxgropix;mx/=2;mx>=1) nbloc*=4;
 }
 
 void computeFPS()
@@ -371,8 +387,16 @@ void displayFunc(void)
 			// ajustage du maxgropix en fonction du temps mis pour calculer
 			if (gropix==maxgropix) // on est dans la pass la plus grossiere
 			{
-				if ((maxgropix>  1)&&(timeEstimate<1./60.)) maxgropix /= 2;
-				if ((maxgropix<128)&&(timeEstimate>1./16.)) maxgropix *= 2;
+				if ((maxgropix>  1)&&(timeEstimate<1./30.))
+				{
+					maxgropix /= 2;
+					newpic();
+				}
+				if ((maxgropix<128)&&(timeEstimate>1./8.))
+				{
+					maxgropix *= 2;
+					newpic();
+				}
 			}
 			
 			bloc++;
@@ -381,7 +405,7 @@ void displayFunc(void)
 				if (gropix>1) gropix/=2;
 				bloc=0;				
 				nbloc=1;
-				for (int mx=maxgropix;mx/=2;mx>=1) nbloc++;
+				for (int mx=maxgropix;mx>gropix;mx/=2) nbloc*=4;
 			}
 			if (( gropix == 1 )&&(bloc==0)) pass++;
 
@@ -460,7 +484,7 @@ void keyboardFunc(unsigned char k, int, int)
             printf("detail = %d\n", crunch);
             printf("color = %d\n", colorSeed);
             printf("\n");
-			ShellExecute(0, "open", "http://code.google.com/p/kanulia/wiki/Control", 0, 0, 1);
+			openHelp();
             break;
 
         case 'r': case 'R':
@@ -854,7 +878,7 @@ void mainMenu(int i)
 
 	switch (i) {
 		case 10:
-			ShellExecute(0, "open", "http://code.google.com/p/kanulia/wiki/Control", 0, 0, 1);
+			openHelp();
 			break;		
 	}
 	newpic();
@@ -1028,13 +1052,14 @@ void reshapeFunc(int w, int h)
     glLoadIdentity();
     glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
 
+	newpic();
     createBuffers(w, h);
+	maxgropix=16;
     imageW = w;
     imageH = h;
 	CUDA_SAFE_CALL(cudaMemcpyToSymbol("imgW", &imageW, sizeof(int)));
 	CUDA_SAFE_CALL(cudaMemcpyToSymbol("imgH", &imageH, sizeof(int)));
 
-	newpic();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
