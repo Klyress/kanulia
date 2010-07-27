@@ -1114,8 +1114,8 @@ int main(int argc, char **argv)
         scale = x;
     }
 
-    imageW = 300;
-	imageH = 200;
+    imageW = 1280;
+	imageH = 720;
 
     colors.w = 0;
     colors.x = 3;
