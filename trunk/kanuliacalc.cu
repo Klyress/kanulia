@@ -7,7 +7,7 @@
 #define BLOCKDIM_Y 16
 
 #define ABS(n) ((n) < 0 ? -(n) : (n))
-
+#define MAX_CRN_IN 256
 
 // return the argument of a complex number
 template<class T>
@@ -522,7 +522,7 @@ __device__ inline int CalcJulia4Dcore(const T xPos, const T yPos, const T zPos, 
 
 		if (xx + yy + zz + ww > T(4.0))
 		{
-			*hue =(float)(i)/256.0;
+			*hue =(float)(i)/(float)(MAX_CRN_IN);
 			while (*hue>1.0) *hue -= 1.0;
 			return i;
 		}
@@ -534,7 +534,7 @@ __device__ inline int CalcJulia4Dcore(const T xPos, const T yPos, const T zPos, 
         yy = y * y;
         zz = z * z;
         ww = w * w;
-    } while (i<=256);
+    } while (i<=MAX_CRN_IN);
 	*hue = 0.05;
     return i;
 } // CalcJulia4Dcore
@@ -627,7 +627,7 @@ __device__ int SolidJulia4D(const int ix, const int iy, const int d_imageW, cons
 	rotate4(&dx,&dy,&dz,&dw);
 	int nb = (dist/step);
 
-	T x0 = 0.0;T y0 = 1.0;T z0 = 0.0;T w0 = 0.0;// normal is the secant plan's normal
+	T x0 = 0.0;T y0 = -1.0;T z0 = 0.0;T w0 = 0.0;// normal is the secant plan's normal
 	T x1 = step;T y1 = 0.0;T z1 = 0.0;T w1 = 0.0;
 	T x2 = 0.0;T y2 = step;T z2 = 0.0;T w2 = 0.0;
 	T x3 = 0.0;T y3 = 0.0;T z3 = 0.0;T w3 = 1.0;
@@ -671,6 +671,26 @@ __device__ int SolidJulia4D(const int ix, const int iy, const int d_imageW, cons
 				if (CalcJulia4Dcore(x,  y,  z,  w, &hue)>=crn)
 				{
 					c=0; // stop, we hit the inside
+					// for normal 3D
+					x1=x + x1;
+					y1=y + y1;
+					z1=z + z1;
+					w1=w + w1;
+					dhit = -y1/dy;
+					x1 += dx * dhit;
+					y1 += dy * dhit;
+					z1 += dz * dhit;
+					w1 += dw * dhit;
+
+					x2=x + x2;
+					y2=y + y2;
+					z2=z + z2;
+					w2=w + w2;
+					dhit = -y2/dy;
+					x2 += dx * dhit;
+					y2 += dy * dhit;
+					z2 += dz * dhit;
+					w2 += dw * dhit;
 					hit = true;
 					out = false;
 				}
@@ -762,7 +782,7 @@ __device__ int SolidJulia4D(const int ix, const int iy, const int d_imageW, cons
 		*g = 1;
 		*b = 1;
 	} else {
-		if (!hit)
+//		if (!hit)
 		{
 			// computing vector
 			x1 -= x;y1 -= y;z1 -= z;w1 -= w;
@@ -815,10 +835,10 @@ __device__ int SolidJulia4D(const int ix, const int iy, const int d_imageW, cons
 		anr *= 9.;
 		if ( anr > 1. ) anr=1.;
 		T li = anl*0.7+0.1;
-		if (!hit)
+//		if (!hit)
 			HSL2RGB(hue, 0.6, li + (1. - li)*anr*anr, r, g, b);
-		else
-			HSL2RGB(hue, 0.6, 0.5, r, g, b);
+//		else
+//			HSL2RGB(hue, 0.6, 0.5, r, g, b);
 		//+(anr*anr*anr)/3.
 	}
 	return out;
