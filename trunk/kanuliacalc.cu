@@ -648,7 +648,6 @@ __device__ int SolidJulia4D(const int ix, const int iy, const int d_imageW, cons
 	T ddw=dw;
 	int c=nb;
 	bool out = true; // if ray is out main c=0
-	bool hit = false; // if the ray hit the "inside"
 	do {
 		// if inside empty aera
 		if ( y < 0.)
@@ -691,7 +690,6 @@ __device__ int SolidJulia4D(const int ix, const int iy, const int d_imageW, cons
 					y2 += dy * dhit;
 					z2 += dz * dhit;
 					w2 += dw * dhit;
-					hit = true;
 					out = false;
 				}
 			}
@@ -782,28 +780,25 @@ __device__ int SolidJulia4D(const int ix, const int iy, const int d_imageW, cons
 		*g = 1;
 		*b = 1;
 	} else {
-//		if (!hit)
-		{
-			// computing vector
-			x1 -= x;y1 -= y;z1 -= z;w1 -= w;
-			x2 -= x;y2 -= y;z2 -= z;w2 -= w;
-			// vector product for normal
+		// computing vector
+		x1 -= x;y1 -= y;z1 -= z;w1 -= w;
+		x2 -= x;y2 -= y;z2 -= z;w2 -= w;
+		// vector product for normal
 //	3D Normal in space vue
-//			x0 = x1 * x2 - y1 * y2 - z1 * z2 - w1* w2;
-//			y0 = x1 * y2 + y1 * x2 + z1 * w2 - w1* z2;
-//			z0 = x1 * z2 + z1 * x2 + w1 * y2 - y1* w2;
-//			w0 = x1 * w2 + w1 * x2 + y1 * z2 - z1* y2;
+//		x0 = x1 * x2 - y1 * y2 - z1 * z2 - w1* w2;
+//		y0 = x1 * y2 + y1 * x2 + z1 * w2 - w1* z2;
+//		z0 = x1 * z2 + z1 * x2 + w1 * y2 - y1* w2;
+//		w0 = x1 * w2 + w1 * x2 + y1 * z2 - z1* y2;
 //	4D Normal
-			x0 = y1*(w2*z3-z2*w3)+y2*(z1*w3-w1*z3)+y3*(w1*z2-z1*w2);
-			y0 = x1*(z2*w3-w2*z3)+x2*(w1*z3-z1*w3)+x3*(z1*w2-w1*z2);
-			z0 = x1*(w2*y3-y2*w3)+x2*(y1*w3-w1*y3)+x3*(w1*y2-y1*w2);
-			w0 = x1*(y2*z3-z2*y3)+x2*(z1*y3-y1*z3)+x3*(y1*z2-z1*y2);
+		x0 = y1*(w2*z3-z2*w3)+y2*(z1*w3-w1*z3)+y3*(w1*z2-z1*w2);
+		y0 = x1*(z2*w3-w2*z3)+x2*(w1*z3-z1*w3)+x3*(z1*w2-w1*z2);
+		z0 = x1*(w2*y3-y2*w3)+x2*(y1*w3-w1*y3)+x3*(w1*y2-y1*w2);
+		w0 = x1*(y2*z3-z2*y3)+x2*(z1*y3-y1*z3)+x3*(y1*z2-z1*y2);
 //	3D Normal in space xyz
-//			x0 = y1 * z2 - z1 * y2;
-//			y0 = z1 * x2 - x1 * z2;
-//			z0 = x1 * y2 - y1 * x2;
-//			w0 = 0.;
-		}
+//		x0 = y1 * z2 - z1 * y2;
+//		y0 = z1 * x2 - x1 * z2;
+//		z0 = x1 * y2 - y1 * x2;
+//		w0 = 0.;
 
 		// Normalisation
 		T nd=sqrt(dx*dx+dy*dy+dz*dz+dw*dw);
@@ -835,11 +830,8 @@ __device__ int SolidJulia4D(const int ix, const int iy, const int d_imageW, cons
 		anr *= 9.;
 		if ( anr > 1. ) anr=1.;
 		T li = anl*0.7+0.1;
-//		if (!hit)
-			HSL2RGB(hue, 0.6, li + (1. - li)*anr*anr, r, g, b);
-//		else
-//			HSL2RGB(hue, 0.6, 0.5, r, g, b);
-		//+(anr*anr*anr)/3.
+		HSL2RGB(hue, 0.6, li + (1. - li)*anr*anr, r, g, b);
+		
 	}
 	return out;
 } // CalcJulia

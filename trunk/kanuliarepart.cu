@@ -53,8 +53,8 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
  const T xOff, const T yOff, const T zOff, const T wOff, const T scale, const T scalei,
  const T xJOff, const T yJOff, const T scaleJ,
  const float xblur, const float yblur,
- const unsigned int gropix,
- const unsigned int bloc, const unsigned int nbloc,
+ const unsigned int maxgropix,
+ const unsigned int gropix, const unsigned int bloc,
  const uchar4 colors, const int frame,
  const int animationFrame, const int gridWidth, const int numBlocks, const int julia, const int julia4D)
 {
@@ -73,11 +73,12 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
         __syncthreads();
 #endif
 
-        if (blockIndex >= ((numBlocks/nbloc)+1)*(bloc+1)) break;  // finish
+//        if (blockIndex >= ((numBlocks/nbloc)+1)*(bloc+1)) break;  // finish
+        if (blockIndex >= numBlocks) break;  // finish
 
         // process this block
-        const int ix = blockDim.x * blockX * gropix + threadIdx.x * gropix;
-        const int iy = blockDim.y * blockY * gropix + threadIdx.y * gropix;
+        const int ix = blockDim.x * blockX * maxgropix + threadIdx.x * maxgropix + ((bloc * gropix) % maxgropix);
+        const int iy = blockDim.y * blockY * maxgropix + threadIdx.y * maxgropix + ((bloc * gropix) / maxgropix) * gropix;
 
 		int r = 0;int g = 0;int b = 0;
 		bool seedre = false;bool seedim = false;
@@ -189,8 +190,10 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 			}
 
 			// activer pour voir le calcul progressif
-//			color.x += nbloc;
-//			color.y += bloc*20;
+//			if (gropix==1) color.z += 120;
+//			if (gropix==2) color.y += 120;
+//			if (gropix==4) color.x += 120;
+//				
 					
 			// Output the pixel
 			int pixel = imageW * iy + ix;
@@ -222,15 +225,16 @@ void RunJulia4Drepart(uchar4 *dst, const int imageW, const int imageH,
  const double scale, const double scalei,
  const double xJOff, const double yJOff, const double scaleJ,
  const float xblur, const float yblur,
- const unsigned int gropix,
- const unsigned int bloc, const unsigned int nbloc,
+ const unsigned int maxgropix,
+ const unsigned int gropix, const unsigned int bloc,
  const uchar4 colors, const int frame, const int animationFrame, const int mode, const int numSMs, const int julia, const int julia4D)
 {
     dim3 threads(BLOCKDIM_X, BLOCKDIM_Y);
-    dim3 grid(iDivUp(imageW/gropix, BLOCKDIM_X), iDivUp(imageH/(gropix), BLOCKDIM_Y));
+    dim3 grid(iDivUp(imageW/maxgropix, BLOCKDIM_X), iDivUp(imageH/(maxgropix), BLOCKDIM_Y));
 
     // zero block counter
-    unsigned int hBlockCounter = (((grid.x)*(grid.y)/nbloc)+1)*(bloc);
+//    unsigned int hBlockCounter = (((grid.x)*(grid.y)/nbloc)+1)*(bloc);
+    unsigned int hBlockCounter = 0;
     cutilSafeCall( cudaMemcpyToSymbol(blockCounter, &hBlockCounter, sizeof(unsigned int), 0, cudaMemcpyHostToDevice ) );
 
 	int numWorkUnit = numSMs;
@@ -242,7 +246,7 @@ void RunJulia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 						(float)xOff, (float)yOff, (float)zOff, (float)wOff, (float)scale, (float)scalei,
 						(float)xJOff, (float)yJOff, (float)scaleJ,
 						xblur, yblur,
-						gropix, bloc, nbloc,
+						maxgropix, gropix, bloc,
 						colors, frame, animationFrame, grid.x, (grid.x)*(grid.y), julia, julia4D);
 	    break;
 	case 1:
@@ -250,7 +254,7 @@ void RunJulia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 						xOff, yOff, zOff, wOff, scale, scalei,
 						xJOff, yJOff, scaleJ,
 						xblur, yblur,
-						gropix, bloc, nbloc,
+						maxgropix, gropix, bloc,
 						colors, frame, animationFrame, grid.x, (grid.x)*(grid.y), julia, julia4D);
 		break;
 	}

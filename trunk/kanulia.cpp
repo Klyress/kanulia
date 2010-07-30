@@ -115,6 +115,7 @@ double StepOffim = 1.;
 // Affichage bloc par bloc
 unsigned int bloc=0;
 unsigned int nbloc=1;
+unsigned int sqrnb=1;
 
 // Affichage pixélisé de la julia
 unsigned int maxgropix = 16; // taille du bloc maximal pixelisé de calcul rapide
@@ -133,6 +134,7 @@ int precisionMode = 0;
 int animationFrame = 0;
 int animationStep = 0;
 int pass = 0;
+int maxpass = 1/*28*/;
 
 // SHIFT ALT and CTRL status
 int modifiers = 0;
@@ -208,6 +210,7 @@ void newpic()
 	gropix = maxgropix;
 	bloc = 0;
 	nbloc=1;
+	sqrnb=1;
 //	for (int mx=maxgropix;mx/=2;mx>=1) nbloc*=4;
 }
 
@@ -256,8 +259,8 @@ void GetSample(int sampleIndex, float &x, float &y)
         { 92, 119}, { 51,  71}, {124, 101}, { 68,  92}, { 78,  10}, { 13, 118}, {  7,  84}, {105,   4}
     };
 
-    x = (1.0f / 128.0f) * (0.5f + (float)pairData[sampleIndex][0]);
-    y = (1.0f / 128.0f) * (0.5f + (float)pairData[sampleIndex][1]);
+    x = (1.0f / (float)maxpass) * (0.5f + (float)pairData[sampleIndex][0]);
+    y = (1.0f / (float)maxpass) * (0.5f + (float)pairData[sampleIndex][1]);
 } // GetSample
 
 // OpenGL display function
@@ -330,7 +333,7 @@ void displayFunc(void)
     pass = 0;
 #endif
 
-    if (pass < 128) {
+    if (pass < maxpass) {
         float timeEstimate;
         int startPass = pass;
         uchar4 *d_dst = NULL;
@@ -370,11 +373,42 @@ void displayFunc(void)
 //			if (pass && !startPass) // Use the adaptive sampling version when animating.
 //				RunJulia4D1_sm13(d_dst, imageW, imageH, x, y, s, xj, yj, sj, colors, pass++, animationFrame, precisionMode, numSMs, julia, julia4D);
 //			else
-				RunJulia4Drepart(d_dst, // destination buffer
+
+			// si le bloc vas etre un recalcul, on le zap, le suivant sera forcement un calcul a faire.
+	/*		if (gropix!=maxgropix) // pas la 1ere pass
+			{
+				int ix = ((bloc * gropix) % maxgropix);
+				int iy = ((bloc * gropix) / maxgropix) * gropix;
+				if (bloc % (gropix*2) == 0 ) bloc++;
+			}*/
+			
+			int rebloc = 0;
+			int bbloc = bloc;
+			for (unsigned int mx = sqrnb/2;mx >= 1; mx/=2)
+			{
+				switch ( bbloc % 4 )
+				{
+		/*			case 0:
+						rebloc += 0;
+						break;*/
+					case 1:
+						rebloc += (sqrnb*mx)+mx; // une ligne taille mx et un mx pixel
+						break;
+					case 2:
+						rebloc += mx;
+						break;
+					case 3:
+						rebloc += (sqrnb*mx);
+						break;
+				}
+				bbloc = bbloc / 4;
+			}
+			
+			RunJulia4Drepart(d_dst, // destination buffer
 					imageW, imageH, // windows size
 					x, y, z, w, s, si, xj, yj, sj, // seed point and scale for mandel brod and julia
 					( 2.0 * xs ) - 1.0, ( 2.0 * ys ) - 1.0 , // blur modification
-					gropix, bloc, nbloc,
+					maxgropix, gropix, rebloc,
 					colors, pass, // color palette, and pass number
 					animationFrame, precisionMode,
 					numSMs, julia, julia4D);
@@ -382,7 +416,7 @@ void displayFunc(void)
 
             // Estimate the total time of the frame if one more pass is rendered
             timeEstimate = 0.001f * cutGetTimerValue(hTimer) * ((float)(pass + 1 - startPass) / (float)((pass - startPass)?(pass-startPass):1));
-			printf("startpass=%d pass=%d M=%d gropix=%d blc= %d nblc=%d Estimate=%5.8f\n",startPass,pass,maxgropix,gropix,bloc,nbloc,timeEstimate);
+			printf("startpass=%d pass=%d M=%d gropix=%d blc= %d rblc=%d nblc=%d Estimate=%5.8f\n",startPass,pass,maxgropix,gropix,bloc,rebloc,nbloc,timeEstimate);
 
 			// ajustage du maxgropix en fonction du temps mis pour calculer
 			if (gropix==maxgropix) // on est dans la pass la plus grossiere
@@ -392,7 +426,7 @@ void displayFunc(void)
 					maxgropix /= 2;
 					newpic();
 				}
-				if ((maxgropix<128)&&(timeEstimate>1./8.))
+				if ((maxgropix<maxpass)&&(timeEstimate>1./8.))
 				{
 					maxgropix *= 2;
 					newpic();
@@ -402,14 +436,24 @@ void displayFunc(void)
 			bloc++;
 			if (bloc==nbloc)
 			{
+				// si on viens de terminer une passe au niveau le plus fin, on incremente
+				if ( gropix == 1 ) pass++;
+				
 				if (gropix>1) gropix/=2;
-				bloc=0;				
-				nbloc=1;
-				for (int mx=maxgropix;mx>gropix;mx/=2) nbloc*=4;
-			}
-			if (( gropix == 1 )&&(bloc==0)) pass++;
+				
+				bloc=0;
 
-        } while ((pass < 128) && (timeEstimate < 1.0f / 60.0f) && !RUN_TIMING);
+				// On calcul le nombre de bloc
+				sqrnb=maxgropix/gropix;
+				nbloc=sqrnb*sqrnb;
+//				nbloc=1;
+//				for (unsigned int mx=maxgropix;mx>gropix;mx/=2) nbloc*=4;
+				// si on est dans la 1ere image, on éviteles cases deja affiché
+				if (pass == 0) bloc = (nbloc/4);
+			}
+			
+
+        } while ((pass < maxpass) && (timeEstimate < 1.0f / 60.0f) && !RUN_TIMING);
         cutilSafeCall(cudaGLUnmapBufferObject(gl_PBO));
 #if RUN_TIMING
         printf("GPU = %5.8f\n", 0.001f * cutGetTimerValue(hTimer));
@@ -1054,7 +1098,6 @@ void reshapeFunc(int w, int h)
 
 	newpic();
     createBuffers(w, h);
-	maxgropix=16;
     imageW = w;
     imageH = h;
 	CUDA_SAFE_CALL(cudaMemcpyToSymbol("imgW", &imageW, sizeof(int)));
