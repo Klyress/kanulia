@@ -134,7 +134,7 @@ int precisionMode = 0;
 int animationFrame = 0;
 int animationStep = 0;
 int pass = 0;
-int maxpass = 1/*28*/;
+int maxpass = 128;
 
 // SHIFT ALT and CTRL status
 int modifiers = 0;
@@ -1096,6 +1096,7 @@ void reshapeFunc(int w, int h)
     glLoadIdentity();
     glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
 
+	maxgropix = 16;/*un espece de rapport entre les tailles plutot*/
 	newpic();
     createBuffers(w, h);
     imageW = w;

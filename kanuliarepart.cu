@@ -85,7 +85,7 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 
 		if ((ix < imageW) && (iy < imageH)) {
 			int m = 0;
-	        if ((ix < imageW / julia) && (iy < imageH / julia)) {
+	        if ( (julia<10) && (ix < imageW / julia) && (iy < imageH / julia)) {
 			    // Calculate the location
 			    const T xPos = (T)ix * scale * julia + xOff;
 				const T yPos = (T)iy * scale * julia + yOff;
@@ -102,7 +102,7 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 					m = CalcMandel4Dcore<T>(xPos,  yPos,  zJS,  wJS, &hue);
 					if (m<=256) HSL2RGB(hue, 0.6, 0.5, &r, &g, &b);
 				}
-    		} else if (julia4D&&((imageW - ix < imageW / julia) && (iy < imageH / julia))) {
+    		} else if (julia4D&& (julia<10) &&((imageW - ix < imageW / julia) && (iy < imageH / julia))) {
 			    // Calculate the location
 			    const T zPos = (T)(imageW - ix) * scalei * julia + zOff;
 				const T wPos = (T)iy           * scalei * julia  + wOff;
