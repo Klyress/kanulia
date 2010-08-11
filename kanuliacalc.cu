@@ -10,8 +10,7 @@
 #define MAX_CRN_IN 256
 
 // return the argument of a complex number
-template<class T>
-__device__ inline float arg( T re, T im )
+__device__ inline float arg( float re, float im )
 {
 	float pi = 3.14159;
 	float a = 0.;
@@ -93,173 +92,172 @@ __device__ inline void HSL2RGB(float h, const float sl, const float ll, int *rc,
 
 // The core Mandelbrot CUDA GPU calculation function
 // Unrolled version
-template<class T>
-__device__ inline int CalcMandelbrot(const T xPos, const T yPos)
+__device__ inline int CalcMandelbrot(const float xPos, const float yPos, const int crn)
 {
-    T y = yPos;
-    T x = xPos;
-    T yy = y * y;
-    T xx = x * x;
+    float y = yPos;
+    float x = xPos;
+    float yy = y * y;
+    float xx = x * x;
     int i = crn;
 
     do {
 		// Iteration 1
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 1;
-        y = x * y * T(2.0) + yPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy + xPos;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 2
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 2;
-        y = x * y * T(2.0) + yPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy + xPos;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 3
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 3;
-        y = x * y * T(2.0) + yPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy + xPos;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 4
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 4;
-        y = x * y * T(2.0) + yPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy + xPos;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 5
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 5;
-        y = x * y * T(2.0) + yPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy + xPos;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 6
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 6;
-        y = x * y * T(2.0) + yPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy + xPos;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 7
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 7;
-        y = x * y * T(2.0) + yPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy + xPos;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 8
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 8;
-        y = x * y * T(2.0) + yPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy + xPos;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 9
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 9;
-        y = x * y * T(2.0) + yPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy + xPos;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 10
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 10;
-        y = x * y * T(2.0) + yPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy + xPos;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 11
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 11;
-        y = x * y * T(2.0) + yPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy + xPos;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 12
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 12;
-        y = x * y * T(2.0) + yPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy + xPos;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 13
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 13;
-        y = x * y * T(2.0) + yPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy + xPos;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 14
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 14;
-        y = x * y * T(2.0) + yPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy + xPos;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 15
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 15;
-        y = x * y * T(2.0) + yPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy + xPos;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 16
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 16;
-        y = x * y * T(2.0) + yPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy + xPos;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 17
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 17;
-        y = x * y * T(2.0) + yPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy + xPos;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 18
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 18;
-        y = x * y * T(2.0) + yPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy + xPos;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 19
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 19;
-        y = x * y * T(2.0) + yPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy + xPos;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 20
         i -= 20;
-		if ((i <= 0) || (xx + yy > T(4.0)))
+		if ((i <= 0) || (xx + yy > float(4.0)))
 			return i;
-        y = x * y * T(2.0) + yPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy + xPos;
         yy = y * y;
         xx = x * x;
@@ -269,173 +267,172 @@ __device__ inline int CalcMandelbrot(const T xPos, const T yPos)
 // The core Julia CUDA GPU calculation function
 
 // Unrolled version
-template<class T>
-__device__ inline int CalcJulia(const T xPos, const T yPos, const float4 JS, const unsigned int crn)
+__device__ inline int CalcJulia(const float xPos, const float yPos, const float4 JS, const unsigned int crn)
 {
-    T y = yPos;
-    T x = xPos;
-    T yy = y * y;
-    T xx = x * x;
+    float y = yPos;
+    float x = xPos;
+    float yy = y * y;
+    float xx = x * x;
     int i = crn;
 
     do {
 		// Iteration 1
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 1;
-        y = x * y * T(2.0) + JS.y;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy + JS.x;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 2
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 2;
-        y = x * y * T(2.0) + JS.y;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy + JS.x;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 3
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 3;
-        y = x * y * T(2.0) + JS.y;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy + JS.x;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 4
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 4;
-        y = x * y * T(2.0) + JS.y;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy + JS.x;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 5
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 5;
-        y = x * y * T(2.0) + JS.y;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy + JS.x;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 6
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 6;
-        y = x * y * T(2.0) + JS.y;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy + JS.x;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 7
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 7;
-        y = x * y * T(2.0) + JS.y;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy + JS.x;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 8
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 8;
-        y = x * y * T(2.0) + JS.y;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy + JS.x;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 9
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 9;
-        y = x * y * T(2.0) + JS.y;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy + JS.x;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 10
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 10;
-        y = x * y * T(2.0) + JS.y;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy + JS.x;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 11
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 11;
-        y = x * y * T(2.0) + JS.y;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy + JS.x;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 12
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 12;
-        y = x * y * T(2.0) + JS.y;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy + JS.x;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 13
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 13;
-        y = x * y * T(2.0) + JS.y;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy + JS.x;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 14
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 14;
-        y = x * y * T(2.0) + JS.y;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy + JS.x;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 15
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 15;
-        y = x * y * T(2.0) + JS.y;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy + JS.x;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 16
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 16;
-        y = x * y * T(2.0) + JS.y;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy + JS.x;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 17
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 17;
-        y = x * y * T(2.0) + JS.y;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy + JS.x;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 18
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 18;
-        y = x * y * T(2.0) + JS.y;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy + JS.x;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 19
-		if (xx + yy > T(4.0))
+		if (xx + yy > float(4.0))
 			return i - 19;
-        y = x * y * T(2.0) + JS.y;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy + JS.x;
         yy = y * y;
         xx = x * x;
 
 		// Iteration 20
         i -= 20;
-		if ((i <= 0) || (xx + yy > T(4.0)))
+		if ((i <= 0) || (xx + yy > float(4.0)))
 			return i;
-        y = x * y * T(2.0) + JS.y;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy + JS.x;
         yy = y * y;
         xx = x * x;
@@ -443,24 +440,23 @@ __device__ inline int CalcJulia(const T xPos, const T yPos, const float4 JS, con
 } // CalcJulia
 // The core Julia CUDA GPU calculation function
 
-template<class T>
-__device__ inline int CalcJulia4D(const T xPos, const T yPos, const T zPos, const T wPos, float4 JS, const unsigned int crn)
+__device__ inline int CalcJulia4D(const float xPos, const float yPos, const float zPos, const float wPos, float4 JS, const unsigned int crn)
 {
-    T x = xPos;T y = yPos;T z = zPos;T w = wPos;
-    T xx = x * x;
-    T yy = y * y;
-    T zz = z * z;
-    T ww = w * w;
+    float x = xPos;float y = yPos;float z = zPos;float w = wPos;
+    float xx = x * x;
+    float yy = y * y;
+    float zz = z * z;
+    float ww = w * w;
     int i = crn;
 
 //	if (y>0) return i;
     do {
 		i--;
-		if (xx + yy + zz + ww > T(4.0))
+		if (xx + yy + zz + ww > float(4.0))
 			return i;
-        z = x * z * T(2.0) + JS.z;
-        w = x * w * T(2.0) + JS.w;
-        y = x * y * T(2.0) + JS.y;
+        z = x * z * float(2.0) + JS.z;
+        w = x * w * float(2.0) + JS.w;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy - zz - ww + JS.x;
         xx = x * x;
         yy = y * y;
@@ -470,14 +466,13 @@ __device__ inline int CalcJulia4D(const T xPos, const T yPos, const T zPos, cons
     return 0;
 } // CalcJulia4D
 
-template<class T>
-__device__ inline int CalcJulia4Dhue(const T xPos, const T yPos, const T zPos, const T wPos, float4 JS, float *hue, const unsigned int crn)
+__device__ inline int CalcJulia4Dhue(const float xPos, const float yPos, const float zPos, const float wPos, float4 JS, float *hue, const unsigned int crn)
 {
-    T x = xPos;T y = yPos;T z = zPos;T w = wPos;
-    T xx = x * x;
-    T yy = y * y;
-    T zz = z * z;
-    T ww = w * w;
+    float x = xPos;float y = yPos;float z = zPos;float w = wPos;
+    float xx = x * x;
+    float yy = y * y;
+    float zz = z * z;
+    float ww = w * w;
 
     int i = crn;
 	int huenb = 7;
@@ -489,14 +484,14 @@ __device__ inline int CalcJulia4Dhue(const T xPos, const T yPos, const T zPos, c
 		huenb--;
 		if (huenb==0) *hue = arg(y,z);
 
-		if (xx + yy + zz + ww > T(4.0))
+		if (xx + yy + zz + ww > float(4.0))
 		{
 //			*hue = 0.5 + cos((x+y+z+w)/4.)/2.;
 			return i;
 		}
-        z = x * z * T(2.0) + JS.z;
-        w = x * w * T(2.0) + JS.w;
-        y = x * y * T(2.0) + JS.y;
+        z = x * z * float(2.0) + JS.z;
+        w = x * w * float(2.0) + JS.w;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy - zz - ww + JS.x;
         xx = x * x;
         yy = y * y;
@@ -506,29 +501,28 @@ __device__ inline int CalcJulia4Dhue(const T xPos, const T yPos, const T zPos, c
     return 0;
 } // CalcJulia4Dhue
 
-template<class T>
-__device__ inline int CalcJulia4Dcore(const T xPos, const T yPos, const T zPos, const T wPos, const float4 JS, float *hue)
+__device__ inline int CalcJulia4Dcore(const float xPos, const float yPos, const float zPos, const float wPos, const float4 JS, float *hue)
 {
-    T x = xPos;T y = yPos;T z = zPos;T w = wPos;
-    T xx = x * x;
-    T yy = y * y;
-    T zz = z * z;
-    T ww = w * w;
+    float x = xPos;float y = yPos;float z = zPos;float w = wPos;
+    float xx = x * x;
+    float yy = y * y;
+    float zz = z * z;
+    float ww = w * w;
 
     int i = 0;
 
     do {
 		i++;
 
-		if (xx + yy + zz + ww > T(4.0))
+		if (xx + yy + zz + ww > float(4.0))
 		{
 			*hue =(float)(i)/(float)(MAX_CRN_IN);
 			while (*hue>1.0) *hue -= 1.0;
 			return i;
 		}
-        z = x * z * T(2.0) + JS.z;
-        w = x * w * T(2.0) + JS.w;
-        y = x * y * T(2.0) + JS.y;
+        z = x * z * float(2.0) + JS.z;
+        w = x * w * float(2.0) + JS.w;
+        y = x * y * float(2.0) + JS.y;
         x = xx - yy - zz - ww + JS.x;
         xx = x * x;
         yy = y * y;
@@ -539,29 +533,28 @@ __device__ inline int CalcJulia4Dcore(const T xPos, const T yPos, const T zPos, 
     return i;
 } // CalcJulia4Dcore
 
-template<class T>
-__device__ inline int CalcMandel4Dcore(const T xPos, const T yPos, const T zPos, const T wPos, float *hue)
+__device__ inline int CalcMandel4Dcore(const float xPos, const float yPos, const float zPos, const float wPos, float *hue)
 {
-    T x = 0.;T y = 0.;T z = 0./*JS.z*/;T w = 0./*JS.w*/;
-    T xx = x * x;
-    T yy = y * y;
-    T zz = z * z;
-    T ww = w * w;
+    float x = 0.;float y = 0.;float z = 0./*JS.z*/;float w = 0./*JS.w*/;
+    float xx = x * x;
+    float yy = y * y;
+    float zz = z * z;
+    float ww = w * w;
 
     int i = 0;
 
     do {
 		i++;
 
-		if (xx + yy + zz + ww > T(4.0))
+		if (xx + yy + zz + ww > float(4.0))
 		{
 			*hue =(float)(i)/256.0;
 			while (*hue>1.0) *hue -= 1.0;
 			return i;
 		}
-        z = x * z * T(2.0) + zPos;
-        w = x * w * T(2.0) + wPos;
-        y = x * y * T(2.0) + yPos;
+        z = x * z * float(2.0) + zPos;
+        w = x * w * float(2.0) + wPos;
+        y = x * y * float(2.0) + yPos;
         x = xx - yy - zz - ww + xPos;
         xx = x * x;
         yy = y * y;
@@ -574,14 +567,13 @@ __device__ inline int CalcMandel4Dcore(const T xPos, const T yPos, const T zPos,
 
 // The core Julia CUDA GPU calculation function
 
-template<class T>
-__device__ int CloudJulia4D(const T ox, const T oy, const T oz, const T ow, const float4 JS, const T dx, const T dy, const T dz, const T dw, int *r, int *g, int *b, int nb, const unsigned int crn)
+__device__ int CloudJulia4D(const float ox, const float oy, const float oz, const float ow, const float4 JS, const float dx, const float dy, const float dz, const float dw, int *r, int *g, int *b, int nb, const unsigned int crn)
 {
-	T ret = 0;
-	T x=ox;
-	T y=oy;
-	T z=oz;
-	T w=ow;
+	float ret = 0;
+	float x=ox;
+	float y=oy;
+	float z=oz;
+	float w=ow;
 	int c=nb;
 	do {
 		x += dx;
@@ -606,46 +598,45 @@ __device__ int CloudJulia4D(const T ox, const T oy, const T oz, const T ow, cons
 } // CalcJulia
 
 // The core Julia CUDA GPU calculation function
-template<class T>
-__device__ int SolidJulia4D(const int ix, const int iy, const float4 JS, const float4 angle, const int d_imageW, const int d_imageH, const T scaleJ,
-	const float xblur, const float yblur, int *r, int *g, int *b, const T xJOff, const T yJOff, const unsigned int crn)
+__device__ int SolidJulia4D(const int ix, const int iy, const float4 JS, const float4 angle, const int d_imageW, const int d_imageH, const float scaleJ,
+	const float xblur, const float yblur, int *r, int *g, int *b, const float xJOff, const float yJOff, const unsigned int crn)
 {
 	//hue color
 	float hue;
-	T dist = 6.0;
-	T step = 0.007;
+	float dist = 6.0;
+	float step = 0.007;
 
-	T x = (T)ix * scaleJ + xJOff;
-	T y = (T)iy * scaleJ + yJOff;
-	T z = - 3.0;
-	T w = 0.0;
-	T dx = sin( 0.7 * step * ( (float) ix + xblur - (d_imageW/2.)) / ((float) d_imageW) );
-	T dy = sin( 0.7 * step * ( (float) iy + yblur - (d_imageH/2.)) / ((float) d_imageW) );
-	T dz = step;
-	T dw = 0.;
+	float x = (float)ix * scaleJ + xJOff;
+	float y = (float)iy * scaleJ + yJOff;
+	float z = - 3.0;
+	float w = 0.0;
+	float dx = sin( 0.7 * step * ( (float) ix + xblur - (d_imageW/2.)) / ((float) d_imageW) );
+	float dy = sin( 0.7 * step * ( (float) iy + yblur - (d_imageH/2.)) / ((float) d_imageW) );
+	float dz = step;
+	float dw = 0.;
 	rotate4(&x,&y,&z,&w,angle);
 	rotate4(&dx,&dy,&dz,&dw,angle);
 	int nb = (dist/step);
 
-	T x0 = 0.0;T y0 = -1.0;T z0 = 0.0;T w0 = 0.0;// normal is the secant plan's normal
-	T x1 = step;T y1 = 0.0;T z1 = 0.0;T w1 = 0.0;
-	T x2 = 0.0;T y2 = step;T z2 = 0.0;T w2 = 0.0;
-	T x3 = 0.0;T y3 = 0.0;T z3 = 0.0;T w3 = 1.0;
+	float x0 = 0.0;float y0 = -1.0;float z0 = 0.0;float w0 = 0.0;// normal is the secant plan's normal
+	float x1 = step;float y1 = 0.0;float z1 = 0.0;float w1 = 0.0;
+	float x2 = 0.0;float y2 = step;float z2 = 0.0;float w2 = 0.0;
+	float x3 = 0.0;float y3 = 0.0;float z3 = 0.0;float w3 = 1.0;
 
 	rotate4(&x1,&y1,&z1,&w1,angle);
 	rotate4(&x2,&y2,&z2,&w2,angle);
 	rotate4(&x3,&y3,&z3,&w3,angle);
 
-	T xl = 1.;
-	T yl = -1.;
-	T zl = 1.;
-	T wl = 0.;
+	float xl = 1.;
+	float yl = -1.;
+	float zl = 1.;
+	float wl = 0.;
 	rotate4(&xl,&yl,&zl,&wl,angle);
 
-	T ddx=dx;
-	T ddy=dy;
-	T ddz=dz;
-	T ddw=dw;
+	float ddx=dx;
+	float ddy=dy;
+	float ddz=dz;
+	float ddw=dw;
 	int c=nb;
 	bool out = true; // if ray is out main c=0
 	do {
@@ -662,7 +653,7 @@ __device__ int SolidJulia4D(const int ix, const int iy, const float4 JS, const f
 			else
 			{
 				// hit the surface
-				T dhit = -y/dy;
+				float dhit = -y/dy;
 				x += dx * dhit;
 				y += dy * dhit;
 				z += dz * dhit;
@@ -716,8 +707,8 @@ __device__ int SolidJulia4D(const int ix, const int iy, const float4 JS, const f
 				w2=w + w2;
 
 				ddx=dx;ddy= dy;ddz=dz;ddw=dw;
-				T d1x=dx;T d1y=dy;T d1z=dz;T d1w=dw;
-				T d2x=dx;T d2y=dy;T d2z=dz;T d2w=dw;
+				float d1x=dx;float d1y=dy;float d1z=dz;float d1w=dw;
+				float d2x=dx;float d2y=dy;float d2z=dz;float d2w=dw;
 				int in=0,in1=0,in2=0;//,in3=0;
 
 				// place les 2 rayons pour les normales contre la forme
@@ -725,24 +716,24 @@ __device__ int SolidJulia4D(const int ix, const int iy, const float4 JS, const f
 				{
 					do {
 						x1 -= d1x;y1 -= d1y;z1 -= d1z;w1 -= d1w;
-						if (x1*x1 + y1*y1 + z1*z1 + w1*w1 > T(4.0)) out=true;
+						if (x1*x1 + y1*y1 + z1*z1 + w1*w1 > float(4.0)) out=true;
 					} while ((CalcJulia4D(x1, y1, z1, w1, JS, crn) == 0) && (!out) );
 				} else {
 					do {
 						x1 += d1x;y1 += d1y;z1 += d1z;w1 += d1w;
-						if (x1*x1 + y1*y1 + z1*z1 + w1*w1 > T(4.0)) out=true;
+						if (x1*x1 + y1*y1 + z1*z1 + w1*w1 > float(4.0)) out=true;
 					} while ((CalcJulia4D(x1, y1, z1, w1, JS, crn) != 0) && (!out) );
 				}
 				if (CalcJulia4D(x2, y2, z2, w2, JS, crn)==0)
 				{
 					do {
 						x2 -= d2x;y2 -= d2y;z2 -= d2z;w2 -= d2w;
-						if (x2*x2 + y2*y2 + z2*z2 + w2*w2 > T(4.0)) out=true;
+						if (x2*x2 + y2*y2 + z2*z2 + w2*w2 > float(4.0)) out=true;
 					} while ((CalcJulia4D(x2, y2, z2, w2, JS, crn) == 0) && (!out) );
 				} else {
 					do {
 						x2 += d2x;y2 += d2y;z2 += d2z;w2 += d2w;
-						if (x2*x2 + y2*y2 + z2*z2 + w2*w2 > T(4.0)) out=true;
+						if (x2*x2 + y2*y2 + z2*z2 + w2*w2 > float(4.0)) out=true;
 					} while ((CalcJulia4D(x2, y2, z2, w2, JS, crn) != 0) && (!out) );
 				}
 
@@ -801,35 +792,35 @@ __device__ int SolidJulia4D(const int ix, const int iy, const float4 JS, const f
 //		w0 = 0.;
 
 		// Normalisation
-		T nd=sqrt(dx*dx+dy*dy+dz*dz+dw*dw);
-		T n0=sqrt(x0*x0+y0*y0+z0*z0+w0*w0);
-		T nl=sqrt(xl*xl+yl*yl+zl*zl+wl*wl);
+		float nd=sqrt(dx*dx+dy*dy+dz*dz+dw*dw);
+		float n0=sqrt(x0*x0+y0*y0+z0*z0+w0*w0);
+		float nl=sqrt(xl*xl+yl*yl+zl*zl+wl*wl);
 		dx/=nd;dy/=nd;dz/=nd;dw/=nd;
 		x0/=n0;y0/=n0;z0/=n0;w0/=n0;
 		xl/=nl;yl/=nl;zl/=nl;wl/=nl;
 
 		// angle of direction / normal
-		T anv = (x0 * dx + y0 *dy + z0 *dz + w0 *dw);
+		float anv = (x0 * dx + y0 *dy + z0 *dz + w0 *dw);
 		if (anv<0.) anv=0.;
 		// angle of light / normal
 
 		// angle of light direction / normal
-		T anl = -(x0* xl + y0* yl + z0*zl + w0*wl);
+		float anl = -(x0* xl + y0* yl + z0*zl + w0*wl);
 		if (anl<0.) anl=0.;
 
 		// radiance
-		T anr = 0.;
+		float anr = 0.;
 		if ( xl*x0 + yl*y0 + zl*z0 + wl*w0 < 0. )
 		{
-			T xr=xl+2.*x0;T yr=yl+2.*y0;T zr=zl+2.*z0;T wr=wl+2.*w0;
-			T nr=sqrt(xr*xr+yr*yr+zr*zr+wr*wr);
+			float xr=xl+2.*x0;float yr=yl+2.*y0;float zr=zl+2.*z0;float wr=wl+2.*w0;
+			float nr=sqrt(xr*xr+yr*yr+zr*zr+wr*wr);
 			xr/=nr;yr/=nr;zr/=nr;wr/=nr;
 			anr = -0.85 -(xr*dx + yr*dy + zr*dz + wr*dw);
 		}
 		if ( anr < 0. ) anr=0.;
 		anr *= 9.;
 		if ( anr > 1. ) anr=1.;
-		T li = anl*0.7+0.1;
+		float li = anl*0.7+0.1;
 		HSL2RGB(hue, 0.6, li + (1. - li)*anr*anr, r, g, b);
 		
 	}

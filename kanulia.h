@@ -18,18 +18,17 @@ extern "C" void RunJulia4Drepart(uchar4 *dst, const int imageW, const int imageH
 					const float xblur, const float yblur, // blur coeff for julia 4D
 					const unsigned int maxgropix,
 					const unsigned int gropix, const unsigned int nbloc, const unsigned int crn,
-					const uchar4 colors, const int frame, const int animationFrame, const int mode, const int numSMs, const int julia, const int julia4D);
+					const uchar4 colors, const int frame, const int animationFrame, const int numSMs, const int julia, const int julia4D);
 
 __device__ inline void HSL2RGB(float h, const float sl, const float ll, int *rc, int *gc, int *bc);
 
-template<class T>
-__device__ inline int CalcJulia4Dhue(const T xPos, const T yPos, const T zPos, const T wPos, const float4 JS, float *hue);
-template<class T>
-__device__ inline int CalcMandel4Dcore(const T xPos, const T yPos, const T zPos, const T wPos, const float4 JS, float *hue);
+__device__ inline int CalcJulia4Dhue(const float xPos, const float yPos, const float zPos, const float wPos, const float4 JS, float *hue);
+
+__device__ inline int CalcMandel4Dcore(const float xPos, const float yPos, const float zPos, const float wPos, const float4 JS, float *hue);
 
 					
 extern "C" int inEmulationMode();
 
-template<class T> __device__ inline void rotate4(T *px, T *py, T *pz, T *pw, const float4 angle);
+__device__ inline void rotate4(float *px, float *py, float *pz, float *pw, const float4 angle);
 
 #endif
