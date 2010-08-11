@@ -5,10 +5,10 @@
 
 
 //  Rotation de quaternion
-template<class T>
-__device__ inline void rotate4(T *px, T *py, T *pz, T *pw, const float4 angle)
+
+__device__ inline void rotate4(float *px, float *py, float *pz, float *pw, const float4 angle)
 {
-	T t;
+	float t;
 	if (angle.x != 0. ) {
 		t  =   *py * cos(angle.x) + *pz * sin(angle.x);
 		*pz = - *py * sin(angle.x) + *pz * cos(angle.x);
@@ -48,10 +48,9 @@ __device__ inline void rotate4(T *px, T *py, T *pz, T *pw, const float4 angle)
 
 __device__ unsigned int blockCounter;   // global counter, initialized to zero before kernel launch
 
-template<class T>
 __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
- const float4 Off, const float4 JS, const float4 angle, const T scale, const T scalei,
- const T xJOff, const T yJOff, const T scaleJ,
+ const float4 Off, const float4 JS, const float4 angle, const float scale, const float scalei,
+ const float xJOff, const float yJOff, const float scaleJ,
  const float xblur, const float yblur,
  const unsigned int maxgropix,
  const unsigned int gropix, const unsigned int bloc, const unsigned int crn,
@@ -85,10 +84,10 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 
 		if ((ix < imageW) && (iy < imageH)) {
 			int m = 0;
-	        if ( (julia<10) && (ix < imageW / julia) && (iy < imageH / julia)) {
+	        if ( (julia<32) && (ix < imageW / julia) && (iy < imageH / julia)) {
 			    // Calculate the location
-			    const T xPos = (T)ix * scale * julia + Off.x;
-				const T yPos = (T)iy * scale * julia + Off.y;
+			    const float xPos = (float)ix * scale * julia + Off.x;
+				const float yPos = (float)iy * scale * julia + Off.y;
 
 				// Calculate the Mandelbrot index for the current location
 				if (abs(JS.x-xPos)+abs(JS.y-yPos) < 2.1 * scale * julia )
@@ -98,14 +97,14 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 				if (!seedre)
 				{
 					float hue;
-//					m = CalcMandelbrot<T>(xPos , yPos);
-					m = CalcMandel4Dcore<T>(xPos,  yPos,  JS.z,  JS.w, &hue);
+//					m = CalcMandelbrot(xPos , yPos);
+					m = CalcMandel4Dcore(xPos,  yPos,  JS.z,  JS.w, &hue);
 					if (m<=256) HSL2RGB(hue, 0.6, 0.5, &r, &g, &b);
 				}
-    		} else if (julia4D&& (julia<10) &&((imageW - ix < imageW / julia) && (iy < imageH / julia))) {
+    		} else if (julia4D&& (julia<32) &&((imageW - ix < imageW / julia) && (iy < imageH / julia))) {
 			    // Calculate the location
-			    const T zPos = (T)(imageW - ix) * scalei * julia + Off.z;
-				const T wPos = (T)iy           * scalei * julia  + Off.w;
+			    const float zPos = (float)(imageW - ix) * scalei * julia + Off.z;
+				const float wPos = (float)iy           * scalei * julia  + Off.w;
 
 				// Calculate the Mandelbrot index for the current location
 				if (abs(JS.z-zPos)+abs(JS.w-wPos) < 2.1 * scalei * julia )
@@ -115,42 +114,42 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 				if (!seedim)
 				{
 					float hue;
-//					m = CalcMandelbrot<T>(zPos , wPos);
-					m = CalcMandel4Dcore<T>(JS.x,  JS.y,  zPos,  wPos, &hue);
+//					m = CalcMandelbrot(zPos , wPos);
+					m = CalcMandel4Dcore(JS.x,  JS.y,  zPos,  wPos, &hue);
 					if (m<=256) HSL2RGB(hue, 0.6, 0.5, &r, &g, &b);
 				}
 			} else {
 			    // Calculate the location
-			    const T xPos = (T)ix * scaleJ + xJOff;
-				const T yPos = (T)iy * scaleJ + yJOff;
-/*				const T zPos = (T)0.;
-				const T wPos = (T)0.;*/
+			    const float xPos = (float)ix * scaleJ + xJOff;
+				const float yPos = (float)iy * scaleJ + yJOff;
+/*				const float zPos = (float)0.;
+				const float wPos = (float)0.;*/
 				// Calculate the Mandelbrot index for the current location
 				if (julia4D == 0)
 				{
-					m = CalcJulia<T>(xPos, yPos, JS, crn);
+					m = CalcJulia(xPos, yPos, JS, crn);
 				}
 				if (julia4D == 1)
 				{
-					T dist = 6.0;
-					T step = 0.009;
+					float dist = 6.0;
+					float step = 0.009;
 
-					T ox = (T)ix * scaleJ + xJOff;
-					T oy = (T)iy * scaleJ + yJOff;
-					T oz = - 3.0;
-					T ow = 0.0;
-					T dx = sin( 0.7 * step * ( (T)ix + xblur - (imageW/2.)) / ((float) imageW) );
-					T dy = sin( 0.7 * step * ( (T)iy + yblur - (imageH/2.)) / ((float) imageW) );
-					T dz = step;
-					T dw = 0.;
+					float ox = (float)ix * scaleJ + xJOff;
+					float oy = (float)iy * scaleJ + yJOff;
+					float oz = - 3.0;
+					float ow = 0.0;
+					float dx = sin( 0.7 * step * ( (float)ix + xblur - (imageW/2.)) / ((float) imageW) );
+					float dy = sin( 0.7 * step * ( (float)iy + yblur - (imageH/2.)) / ((float) imageW) );
+					float dz = step;
+					float dw = 0.;
 					rotate4(&ox,&oy,&oz,&ow,angle);
 					rotate4(&dx,&dy,&dz,&dw,angle);
 					int nb = (dist/step);
-					m = CloudJulia4D<T>(ox,oy,oz,ow,JS,dx,dy,dz,dw,&r,&g,&b,nb,crn);
+					m = CloudJulia4D(ox,oy,oz,ow,JS,dx,dy,dz,dw,&r,&g,&b,nb,crn);
 				}
 				if (julia4D == 2)
 				{
-					m = SolidJulia4D<T>(ix-1,iy-1,JS,angle,imageW,imageH,scaleJ,xblur,yblur,&r,&g,&b,xJOff,yJOff,crn);
+					m = SolidJulia4D(ix-1,iy-1,JS,angle,imageW,imageH,scaleJ,xblur,yblur,&r,&g,&b,xJOff,yJOff,crn);
 				}
     		}
 //			m = blockIdx.x;         // uncomment to see scheduling order
@@ -229,7 +228,7 @@ void RunJulia4Drepart(uchar4 *dst, const int imageW, const int imageH,
  const float xblur, const float yblur,
  const unsigned int maxgropix,
  const unsigned int gropix, const unsigned int bloc, const unsigned int crn,
- const uchar4 colors, const int frame, const int animationFrame, const int mode, const int numSMs, const int julia, const int julia4D)
+ const uchar4 colors, const int frame, const int animationFrame, const int numSMs, const int julia, const int julia4D)
 {
     dim3 threads(BLOCKDIM_X, BLOCKDIM_Y);
     dim3 grid(iDivUp(imageW/maxgropix, BLOCKDIM_X), iDivUp(imageH/(maxgropix), BLOCKDIM_Y));
@@ -241,26 +240,13 @@ void RunJulia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 
 	int numWorkUnit = numSMs;
 	
-	switch(mode) {
-	default:
-	case 0:
-	case 1:
-	    Julia4Drepart<float><<<numWorkUnit, threads>>>(dst, imageW, imageH,
+	Julia4Drepart<<<numWorkUnit, threads>>>(dst, imageW, imageH,
 						Off, JS, angle, (float)scale, (float)scalei,
 						(float)xJOff, (float)yJOff, (float)scaleJ,
 						xblur, yblur,
 						maxgropix, gropix, bloc, crn,
 						colors, frame, animationFrame, grid.x, (grid.x)*(grid.y), julia, julia4D);
-	    break;
-	case 2:
-		Julia4Drepart<double><<<numWorkUnit, threads>>>(dst, imageW, imageH,
-						Off, JS, angle, scale, scalei,
-						xJOff, yJOff, scaleJ,
-						xblur, yblur,
-						maxgropix, gropix, bloc, crn,
-						colors, frame, animationFrame, grid.x, (grid.x)*(grid.y), julia, julia4D);
-		break;
-	}
+
     cutilCheckMsg("Julia4D0_sm13 kernel execution failed.\n");
 } // RunJulia4D0
 

@@ -23,24 +23,24 @@
 #include <cuda_runtime_api.h>
 #include <cutil_inline.h>
 #include <cuda_gl_interop.h>
-#include <rendercheck_gl.h>
+/*#include <rendercheck_gl.h>*/
 
 
 #include "kanulia.h"
 
 // Define the files that are to be save and the reference images for validation
-const char *sOriginal[] =
+/*const char *sOriginal[] =
 {
     "mandelbrot.ppm",
     NULL
-};
+};*/
 
-const char *sReference[] =
+/*const char *sReference[] =
 {
     "reference_fp32.ppm",
     "reference_fp64.ppm",
     NULL
-};
+};*/
 
 // Set to 1 to time frame generation
 #define RUN_TIMING 0
@@ -116,10 +116,6 @@ double xJdOff = 0.0;
 double yJdOff = 0.0;
 double dscaleJ = 1.0;
 
-// Precision mode
-// 0=single precision, 1=double
-int precisionMode = 0;
-
 // Starting animation frame and anti-aliasing pass
 int animationFrame = 0;
 int animationStep = 0;
@@ -143,7 +139,7 @@ bool leftClicked = false;
 bool middleClicked = false;
 bool rightClicked = false;
 
-bool haveDoubles = false;
+//bool haveDoubles = false;
 int numSMs = 0;          // number of multiprocessors
 
 // Auto-Verification Code
@@ -155,7 +151,7 @@ unsigned int g_TotalErrors = 0;
 bool g_Verify = false, g_AutoQuit = false;
 
 // CheckFBO/BackBuffer class objects
-CheckRender       *g_CheckRender = NULL;
+//CheckRender       *g_CheckRender = NULL;
 
 #define MAX_EPSILON 50
 
@@ -163,7 +159,7 @@ CheckRender       *g_CheckRender = NULL;
 
 #define BUFFER_DATA(i) ((char *)0 + i)
 
-void AutoQATest()
+/*void AutoQATest()
 {
     if (g_CheckRender && g_CheckRender->IsQAReadback()) {
         char temp[256];
@@ -176,7 +172,7 @@ void AutoQATest()
 		    exit(0);
         }
     }
-}
+}*/
 
 void openHelp()
 {
@@ -214,16 +210,16 @@ void computeFPS()
     if (fpsCount == fpsLimit) {
         char fps[256];
         float ifps = 1.f / (cutGetTimerValue(hTimer) / 1000.f);
-        sprintf(fps, "%sMandelbrot %3.1f fps",
-                ((g_CheckRender && g_CheckRender->IsQAReadback()) ? "AutoTest: " : ""), ifps);
+        sprintf(fps, "%Kanulia %3.1f fps", ifps);
+ //               ((g_CheckRender && g_CheckRender->IsQAReadback()) ? "AutoTest: " : ""), ifps);
 
         glutSetWindowTitle(fps);
         fpsCount = 0;
-        if (g_CheckRender && !g_CheckRender->IsQAReadback()) fpsLimit = (int)MAX(ifps, 1.f);
+//        if (g_CheckRender && !g_CheckRender->IsQAReadback()) fpsLimit = (int)MAX(ifps, 1.f);
 
         cutilCheckError(cutResetTimer(hTimer));
 
-        AutoQATest();
+//        AutoQATest();
     }
 }
 
@@ -352,19 +348,6 @@ void displayFunc(void)
 				yj = (0.5f - (double)imageH * 0.5f) * sj + yJOff;
 			}
 			
-            // Run the mandelbrot generator
-//			if (pass && !startPass) // Use the adaptive sampling version when animating.
-//				RunJulia4D1_sm13(d_dst, imageW, imageH, x, y, s, xj, yj, sj, colors, pass++, animationFrame, precisionMode, numSMs, julia, julia4D);
-//			else
-
-			// si le bloc vas etre un recalcul, on le zap, le suivant sera forcement un calcul a faire.
-	/*		if (gropix!=maxgropix) // pas la 1ere pass
-			{
-				int ix = ((bloc * gropix) % maxgropix);
-				int iy = ((bloc * gropix) / maxgropix) * gropix;
-				if (bloc % (gropix*2) == 0 ) bloc++;
-			}*/
-			
 			int rebloc = 0;
 			int bbloc = bloc;
 			for (unsigned int mx = sqrnb/2;mx >= 1; mx/=2)
@@ -393,7 +376,7 @@ void displayFunc(void)
 					( 2.0 * xs ) - 1.0, ( 2.0 * ys ) - 1.0 , // blur modification
 					maxgropix, gropix, rebloc, crunch,
 					colors, pass, // color palette, and pass number
-					animationFrame, precisionMode,
+					animationFrame,
 					numSMs, julia, julia4D);
             cudaThreadSynchronize();
 
@@ -453,7 +436,7 @@ void displayFunc(void)
     glTexCoord2f(0.0f, 1.0f); glVertex2f(0.0f, 1.0f);
     glEnd();
 
-    if (g_CheckRender && g_CheckRender->IsQAReadback() && g_Verify) {
+ /*   if (g_CheckRender && g_CheckRender->IsQAReadback() && g_Verify) {
         printf("> (Frame %d) Readback BackBuffer\n", frameCount);
         g_CheckRender->readback( imageW, imageH, (GLuint)NULL );
         g_CheckRender->savePPM ( sOriginal[0], true, NULL);
@@ -462,7 +445,7 @@ void displayFunc(void)
         }
         g_Verify = false;
         g_AutoQuit = true;
-    }
+    }*/
 
     glutSwapBuffers();
 
@@ -479,9 +462,9 @@ void cleanup()
         h_Src = 0;
     }
 
-    if (g_CheckRender) {
-        delete g_CheckRender; g_CheckRender = NULL;
-    }
+//    if (g_CheckRender) {
+//        delete g_CheckRender; g_CheckRender = NULL;
+//    }
 }
 
 
@@ -607,7 +590,7 @@ void keyboardFunc(unsigned char k, int, int)
             break;
 
         case 'j':
-            if (julia < 16) {
+            if (julia < 32) {
                 julia *= 2;
 				newpic();
 			}
@@ -693,7 +676,7 @@ void mouseFunc(int button, int state, int x, int y)
 	{
         leftClicked = !leftClicked;
 		// in the mandelbro select
-		if ((x < imageW / julia) && (y  > imageH - imageH / julia))
+		if ( (julia < 32) && (x < imageW / julia) && (y  > imageH - imageH / julia))
 		{
 			// real seed point
 			StepOffre = 1.;
@@ -702,7 +685,7 @@ void mouseFunc(int button, int state, int x, int y)
 			
 			newpic();
 		};
-		if (((imageW - x) < imageW / julia) && (y  > imageH - imageH / julia))
+		if ( (julia < 32) && ((imageW - x) < imageW / julia) && (y  > imageH - imageH / julia))
 		{
 			// imaginary seed point
 			StepOffim = 1.;
@@ -715,7 +698,7 @@ void mouseFunc(int button, int state, int x, int y)
 	// middle mouse button
 	if (button == 1) {
 		// in the mandelbro select button released
-	    if ((state == GLUT_UP) && ((x < imageW / julia) && (y  > imageH - imageH / julia))) {
+	    if ((state == GLUT_UP) && ( (julia < 32) && (x < imageW / julia) && (y  > imageH - imageH / julia))) {
 			// printf("Middle Clicked %3.2f %3.2f \n" , ( x - (double) ( imageH ) / 2. ) , ( y - (double) ( imageH ) / 2. ) );
 			
 			OriJSOff.x = JSOff.x;
@@ -727,7 +710,7 @@ void mouseFunc(int button, int state, int x, int y)
 			newpic();
 		}
 		// in the mandelbro select button released
-	    if ((state == GLUT_UP) && (((imageW - x) < imageW / julia) && (y  > imageH - imageH / julia))) {
+	    if ((state == GLUT_UP) && ( (julia < 32) && ((imageW - x) < imageW / julia) && (y  > imageH - imageH / julia))) {
 			// printf("Middle Clicked %3.2f %3.2f \n" , ( x - (double) ( imageH ) / 2. ) , ( y - (double) ( imageH ) / 2. ) );
 			
 			OriJSOff.z = JSOff.z;
@@ -757,12 +740,12 @@ void mouseFunc(int button, int state, int x, int y)
     // Used for wheels, has to be up
 		if ( button == GLUT_WHEEL_UP )
 		{
-			if ((x < imageW / julia) && (y  > imageH - imageH / julia))
+			if ( (julia < 32) && (x < imageW / julia) && (y  > imageH - imageH / julia))
 			{
 				scale /= 1.1f;
 				Off.x += ( x - (double) ( imageW / julia ) / 2. ) * 0.1 * ( scale / (double) (imageW / julia) );
 				Off.y -= ( y - (double) ( imageH - imageH / (2* julia) ) ) * 0.1 * ( scale / (double) (imageW / julia) );
-			} else if (((imageW - x) < imageW / julia) && (y  > imageH - imageH / julia))
+			} else if ( (julia < 32) && ((imageW - x) < imageW / julia) && (y  > imageH - imageH / julia))
 			{
 				scalei /= 1.1f;
 				Off.z += ( (imageW - x) - (double) ( imageW / julia ) / 2. )          * 0.1 * ( scalei / (double) (imageW / julia) );
@@ -777,12 +760,12 @@ void mouseFunc(int button, int state, int x, int y)
 		}
 		else if( button == GLUT_WHEEL_DOWN )
 		{
-			if ((x < imageW / julia) && (y  > imageH - imageH / julia))
+			if ( (julia < 32) && (x < imageW / julia) && (y  > imageH - imageH / julia))
 			{
 				Off.x -= ( x - (double) ( imageW / julia ) / 2. ) * 0.1 * ( scale / (double) (imageW / julia) );
 				Off.y += ( y - (double) ( imageH - imageH / (2 * julia) ) ) * 0.1 * ( scale / (double) (imageW / julia) );
 				scale *= 1.1f;
-			} else if (((imageW - x) < imageW / julia) && (y  > imageH - imageH / julia))
+			} else if ( (julia < 32) && ((imageW - x) < imageW / julia) && (y  > imageH - imageH / julia))
 			{
 				Off.z -= ( (imageW - x) - (double) ( imageW / julia ) / 2. )           * 0.1 * ( scalei / (double) (imageW / julia) );
 				Off.w += (           y  - (double) ( imageH - imageH / (2 * julia) ) ) * 0.1 * ( scalei / (double) (imageW / julia) );
@@ -813,12 +796,12 @@ void motionFunc(int x, int y)
 //    int modifiers = glutGetModifiers();
 
     if (leftClicked) {
-		if ((x < imageW / julia) && (y  > imageH - imageH / julia))
+		if ( (julia < 32) && (x < imageW / julia) && (y  > imageH - imageH / julia))
 		{
 			JSOff.x = Off.x + ( x - (double) ( imageW / julia ) / 2.0 ) * ( scale / (double) (imageW / julia) );
 			JSOff.y = Off.y - ( y - (double) ( imageH - imageH / (2.0 * julia) ) ) * ( scale / (double) (imageW / julia) );
 			newpic();
-		} else if (((imageW - x) < imageW / julia) && (y  > imageH - imageH / julia))
+		} else if ( (julia < 32) && ((imageW - x) < imageW / julia) && (y  > imageH - imageH / julia))
 		{
 			JSOff.z = Off.z + ( (imageW - x) - (double) ( imageW / julia ) / 2.0 ) * ( scalei / (double) (imageW / julia) );
 			JSOff.w = Off.w - ( y - (double) ( imageH - imageH / (2.0 * julia) ) ) * ( scalei / (double) (imageW / julia) );
@@ -848,7 +831,7 @@ void motionFunc(int x, int y)
     }
 
     if (middleClicked)
-		if ((x < imageW / julia) && (y  > imageH - imageH / julia))
+		if ( (julia < 32) && (x < imageW / julia) && (y  > imageH - imageH / julia))
 		{
 			if (fy > 0.0f) {
 				dscale = 1.0 - fy;
@@ -875,12 +858,6 @@ void motionFunc(int x, int y)
 void idleFunc()
 {
 	glutPostRedisplay();
-}
-
-void precisionMenu(int i)
-{
-	precisionMode = i;
-	newpic();
 }
 
 void mainMenu(int i)
@@ -979,12 +956,6 @@ void colorMenu(int i)
 
 void initMenus()
 {
-	int precisionmenu = glutCreateMenu(precisionMenu);
-    glutAddMenuEntry("Single precision", 0);
-    if (haveDoubles) {
-        glutAddMenuEntry("Hardware double precision", 1);
-    }
-
 	int colormenu = glutCreateMenu(colorMenu);
 	glutAddMenuEntry("Previous Palette", 1);
 	glutAddMenuEntry("Next Palette", 2);
@@ -999,7 +970,6 @@ void initMenus()
 	glutAddMenuEntry("Solid Julia4D", 5);
 
 	glutCreateMenu(mainMenu);
-	glutAddSubMenu("Precision",precisionmenu);
 	glutAddSubMenu("Julia",juliamenu);
 	glutAddSubMenu("Color",colormenu);
 	glutAddMenuEntry("Help", 10);
@@ -1087,11 +1057,11 @@ int main(int argc, char **argv)
     cutilSafeCall(cudaGetDeviceProperties(&deviceProp, dev));
     printf("Compute capability %d.%d\n", deviceProp.major, deviceProp.minor);
     int version = deviceProp.major*10 + deviceProp.minor;
-    haveDoubles = (version >= 13);
-    if (inEmulationMode()) {
+//    haveDoubles = (version >= 13);
+//    if (inEmulationMode()) {
         // workaround since SM13 kernel doesn't produce correct output in emulation mode
-        haveDoubles = false;
-    }
+//        haveDoubles = false;
+//    }
     numSMs = deviceProp.multiProcessorCount;
 
     // parse command line arguments
@@ -1161,7 +1131,7 @@ int main(int argc, char **argv)
     printf("OpenGL window created.\n");
 
     // Creating the Auto-Validation Code
-    if (bQAReadback) {
+/*    if (bQAReadback) {
         if (bFBODisplay) {
             g_CheckRender = new CheckFBO(imageW, imageH, 4);
         } else {
@@ -1170,7 +1140,7 @@ int main(int argc, char **argv)
         g_CheckRender->setPixelFormat(GL_RGBA);
         g_CheckRender->setExecPath(argv[0]);
         g_CheckRender->EnableQAReadback(true);
-    }
+    }*/
 
     printf("Starting GLUT main loop...\n");
     printf("\n");
