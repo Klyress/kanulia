@@ -244,6 +244,7 @@ void RunJulia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 	switch(mode) {
 	default:
 	case 0:
+	case 1:
 	    Julia4Drepart<float><<<numWorkUnit, threads>>>(dst, imageW, imageH,
 						Off, JS, angle, (float)scale, (float)scalei,
 						(float)xJOff, (float)yJOff, (float)scaleJ,
@@ -251,7 +252,7 @@ void RunJulia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 						maxgropix, gropix, bloc, crn,
 						colors, frame, animationFrame, grid.x, (grid.x)*(grid.y), julia, julia4D);
 	    break;
-	case 1:
+	case 2:
 		Julia4Drepart<double><<<numWorkUnit, threads>>>(dst, imageW, imageH,
 						Off, JS, angle, scale, scalei,
 						xJOff, yJOff, scaleJ,
