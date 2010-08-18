@@ -610,8 +610,8 @@ __device__ int SolidJulia4D(const int ix, const int iy, const float4 JS, const f
 	float y = (float)iy * scaleJ + yJOff;
 	float z = - 3.0;
 	float w = 0.0;
-	float dx = sin( 0.7 * step * ( (float) ix + xblur - (d_imageW/2.)) / ((float) d_imageW) );
-	float dy = sin( 0.7 * step * ( (float) iy + yblur - (d_imageH/2.)) / ((float) d_imageW) );
+	float dx = sin( 0.7 * step * ( (float) ix + xblur - (d_imageW/2.)) / ((float) d_imageW) )*scaleJ;
+	float dy = sin( 0.7 * step * ( (float) iy + yblur - (d_imageH/2.)) / ((float) d_imageW) )*scaleJ;
 	float dz = step;
 	float dw = 0.;
 	rotate4(&x,&y,&z,&w,angle);
