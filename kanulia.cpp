@@ -407,7 +407,7 @@ void displayFunc(void)
 
             // Estimate the total time of the frame if one more pass is rendered
             timeEstimate = 0.001f * cutGetTimerValue(hTimer) * ((float)(pass + 1 - startPass) / (float)((pass - startPass)?(pass-startPass):1));
-		//	printf("startpass=%d pass=%d M=%d gropix=%d blc= %d rblc=%d nblc=%d Estimate=%5.8f\n",startPass,pass,maxgropix,gropix,bloc,rebloc,nbloc,timeEstimate);
+			printf("startpass=%d pass=%d M=%d gropix=%d blc= %d rblc=%d nblc=%d Estimate=%5.8f\n",startPass,pass,maxgropix,gropix,bloc,rebloc,nbloc,timeEstimate);
 
 			// ajustage du maxgropix en fonction du temps mis pour calculer
 			if (gropix==maxgropix) // on est dans la pass la plus grossiere

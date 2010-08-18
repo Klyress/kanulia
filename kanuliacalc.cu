@@ -7,7 +7,7 @@
 #define BLOCKDIM_Y 16
 
 #define ABS(n) ((n) < 0 ? -(n) : (n))
-#define MAX_CRN_IN 256
+#define MAX_CRN_IN 2560
 
 // return the argument of a complex number
 __device__ inline float arg( float re, float im )
@@ -516,8 +516,9 @@ __device__ inline int CalcJulia4Dcore(const float xPos, const float yPos, const 
 
 		if (xx + yy + zz + ww > float(4.0))
 		{
-			*hue =(float)(i)/(float)(MAX_CRN_IN);
+			*hue =(float)(i)/(float)(256);
 			while (*hue>1.0) *hue -= 1.0;
+		//	if (*hue < 0.05) *hue = 0.05;
 			return i;
 		}
         z = x * z * float(2.0) + JS.z;
@@ -606,12 +607,12 @@ __device__ int SolidJulia4D(const int ix, const int iy, const float4 JS, const f
 	float dist = 6.0;
 	float step = 0.007;
 
-	float x = (float)ix * scaleJ + xJOff;
-	float y = (float)iy * scaleJ + yJOff;
+	float x = ((float)ix + (xblur)) * scaleJ + xJOff;
+	float y = ((float)iy + (yblur)) * scaleJ + yJOff;
 	float z = - 3.0;
 	float w = 0.0;
-	float dx = sin( 0.7 * step * ( (float) ix + xblur - (d_imageW/2.)) / ((float) d_imageW) )*scaleJ;
-	float dy = sin( 0.7 * step * ( (float) iy + yblur - (d_imageH/2.)) / ((float) d_imageW) )*scaleJ;
+	float dx = sin( 0.7 * step *scaleJ* ( (float) ix /*+ (xblur)*/ - (d_imageW/2.)) / ((float) d_imageW) );
+	float dy = sin( 0.7 * step *scaleJ* ( (float) iy /*+ (yblur)*/ - (d_imageH/2.)) / ((float) d_imageW) );
 	float dz = step;
 	float dw = 0.;
 	rotate4(&x,&y,&z,&w,angle);
