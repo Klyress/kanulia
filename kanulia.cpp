@@ -249,6 +249,31 @@ void GetSample(int sampleIndex, float &x, float &y)
     y = (1.0f / (float)maxpass) * (0.5f + (float)pairData[sampleIndex][1]);
 } // GetSample
 
+void rotate4(float4 *p, const float4 angle)
+{
+	float t;
+	if (angle.x != 0. ) {
+		t  =   (*p).y * cos(angle.x) + (*p).z * sin(angle.x);
+		(*p).z = - (*p).y * sin(angle.x) + (*p).z * cos(angle.x);
+		(*p).y = t;
+	};
+	if (angle.y != 0. ) {
+		t   =   (*p).x * cos(angle.y) + (*p).z * sin(angle.y);
+		(*p).z = - (*p).x * sin(angle.y) + (*p).z * cos(angle.y);
+		(*p).x = t;
+	};
+	if (angle.z != 0. ) {
+		t   =   (*p).z * cos(angle.z) + (*p).w * sin(angle.z);
+		(*p).w = - (*p).z * sin(angle.z) + (*p).w * cos(angle.z);
+		(*p).z = t;
+	};
+	if (angle.w != 0. ) {
+		t   =   (*p).y * cos(angle.w) + (*p).w * sin(angle.w);
+		(*p).w = - (*p).y * sin(angle.w) + (*p).w * cos(angle.w);
+		(*p).y = t;
+	};
+}
+
 // OpenGL display function
 void displayFunc(void)
 {
@@ -382,7 +407,7 @@ void displayFunc(void)
 
             // Estimate the total time of the frame if one more pass is rendered
             timeEstimate = 0.001f * cutGetTimerValue(hTimer) * ((float)(pass + 1 - startPass) / (float)((pass - startPass)?(pass-startPass):1));
-			printf("startpass=%d pass=%d M=%d gropix=%d blc= %d rblc=%d nblc=%d Estimate=%5.8f\n",startPass,pass,maxgropix,gropix,bloc,rebloc,nbloc,timeEstimate);
+		//	printf("startpass=%d pass=%d M=%d gropix=%d blc= %d rblc=%d nblc=%d Estimate=%5.8f\n",startPass,pass,maxgropix,gropix,bloc,rebloc,nbloc,timeEstimate);
 
 			// ajustage du maxgropix en fonction du temps mis pour calculer
 			if (gropix==maxgropix) // on est dans la pass la plus grossiere
@@ -812,6 +837,7 @@ void motionFunc(int x, int y)
 			{
 				angle.z -= fx*100.0;
 				angle.w -= fy*100.0;
+				
 	//			printf("Motion fx=%f fy=%f\n",fx,fy);
 	//			printf("angle.z=%f angle.w=%f\n",angle.z,angle.w);
 			}
@@ -819,8 +845,15 @@ void motionFunc(int x, int y)
 			{
 				angle.y -= fx*100.0;
 				angle.x -= fy*100.0;
-	//			printf("Motion fx=%f fy=%f\n",fx,fy);
-	//			printf("angle.y=%f angle.x=%f\n",angle.y,angle.x);
+			//	float4 delangle = {0.0,0.0,-fx*100.0,-fy*100.0};
+			//	float4 delangle1st = {0.0,-fy*100.0,0.0,0.0};
+			//	rotate4(&angle,delangle);
+/*				angle.x += delangle.x;
+				angle.y += delangle.y;
+				angle.z += delangle.z;
+				angle.w += delangle.w;*/
+				printf("Motion fx=%f fy=%f\n",fx,fy);
+				printf("angle.y=%f angle.x=%f\n",angle.y,angle.x);
 			}
 			newpic();
 
