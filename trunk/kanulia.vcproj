@@ -525,22 +525,6 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="rendercheck"
-			>
-			<File
-				RelativePath="..\..\common\inc\nvShaderUtils.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\common\src\rendercheck_gl.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\common\inc\rendercheck_gl.h"
-				>
-			</File>
-		</Filter>
-		<Filter
 			Name="Others"
 			>
 			<File

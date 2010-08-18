@@ -802,7 +802,6 @@ __device__ int SolidJulia4D(const int ix, const int iy, const float4 JS, const f
 		// angle of direction / normal
 		float anv = (x0 * dx + y0 *dy + z0 *dz + w0 *dw);
 		if (anv<0.) anv=0.;
-		// angle of light / normal
 
 		// angle of light direction / normal
 		float anl = -(x0* xl + y0* yl + z0*zl + w0*wl);
@@ -820,8 +819,26 @@ __device__ int SolidJulia4D(const int ix, const int iy, const float4 JS, const f
 		if ( anr < 0. ) anr=0.;
 		anr *= 9.;
 		if ( anr > 1. ) anr=1.;
+		
+		// shadow
+		float sh = 1.0;
+		out=true;
+		do {
+			x -= xl*step;y -= yl*step;z -= zl*step;w -= wl*step; //sh+=0.1;
+			if ( y > 0.)
+				if (CalcJulia4D(x, y, z, w, JS, crn)==0) out = false;
+		} while ( (x*x + y*y + z*z + w*w < float(4.0)) &&(out));
+
 		float li = anl*0.7+0.1;
-		HSL2RGB(hue, 0.6, li + (1. - li)*anr*anr, r, g, b);
+		if (!out)
+		{
+			sh=0.5;
+			anr=0.0;
+		}
+		
+		float L = (li + (1. - li)*anr*anr) * sh;
+//		if ( L < 0.0 ) L = 0.0;
+		HSL2RGB(hue, 0.6, L, r, g, b);
 		
 	}
 	return out;
