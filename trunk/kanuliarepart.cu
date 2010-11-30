@@ -31,6 +31,31 @@ __device__ inline void rotate4(float *px, float *py, float *pz, float *pw, const
 	};
 }
 
+__device__ inline void rotate3(float *px, float *py, float *pz, const float4 angle)
+{
+	float t;
+	if (angle.x != 0. ) {
+		t  =    *py * cos(angle.x) + *pz * sin(angle.x);
+		*pz = - *py * sin(angle.x) + *pz * cos(angle.x);
+		*py =   t;
+	};
+	if (angle.y != 0. ) {
+		t   =   *px * cos(angle.y) + *pz * sin(angle.y);
+		*pz = - *px * sin(angle.y) + *pz * cos(angle.y);
+		*px =   t;
+	};
+	if (angle.z != 0. ) {
+		t   =   *px * cos(angle.z) - *py * sin(angle.z);
+		*py =   *px * sin(angle.z) + *py * cos(angle.z);
+		*px =   t;
+	};
+/*	if (angle.w != 0. ) {
+		t   =   *py * cos(angle.w) + *pw * sin(angle.w);
+		*pw = - *py * sin(angle.w) + *pw * cos(angle.w);
+		*py = t;
+	};*/
+}
+
 // The Julia4D CUDA GPU thread function
 
 /*
@@ -125,11 +150,11 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 /*				const float zPos = (float)0.;
 				const float wPos = (float)0.;*/
 				// Calculate the Mandelbrot index for the current location
-				if (julia4D == 0)
+				if (julia4D == JULIA2D)
 				{
 					m = CalcJulia(xPos, yPos, JS, crn);
 				}
-				if (julia4D == 1)
+				if (julia4D == CLOUDJULIA)
 				{
 					float dist = 6.0;
 					float step = 0.009;
@@ -147,9 +172,19 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 					int nb = (dist/step);
 					m = CloudJulia4D(ox,oy,oz,ow,JS,dx,dy,dz,dw,&r,&g,&b,nb,crn);
 				}
-				if (julia4D == 2)
+				if (julia4D & JULIA4D)
 				{
-					m = SolidJulia4D(ix-1,iy-1,JS,angle,imageW,imageH,scaleJ,xblur,yblur,&r,&g,&b,xJOff,yJOff,crn);
+/*					if ((julia4D & CROSSEYE)&&
+					   (  (sqrt( (float)((ix-  imageW/4)*(ix-  imageW/4) + (iy-(imageH)/5)*(iy-(imageH)/5) )) < 20.)						// si viseur
+						||(sqrt( (float)((ix-3*imageW/4)*(ix-3*imageW/4) + (iy-(imageH)/5)*(iy-(imageH)/5) )) < 20.)))
+					{
+						r = 255;
+						g = 255;
+						b = 255;
+					}
+					else*/
+						m = SolidJulia4D(ix-1,iy-1,JS,angle,imageW,imageH,scaleJ,xblur,yblur,&r,&g,&b,xJOff,yJOff,crn,julia4D);
+	//				m = SolidMandelBox3D(ix-1,iy-1,JS,angle,imageW,imageH,scaleJ,xblur,yblur,&r,&g,&b,xJOff,yJOff,crn);
 				}
     		}
 //			m = blockIdx.x;         // uncomment to see scheduling order

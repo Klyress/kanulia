@@ -65,7 +65,7 @@ unsigned int crunch = 10;
 int julia = 4;
 
 // Start with
-int julia4D = 2;
+int julia4D = JULIA4D;
 // Angle for julia4D view
 float4 angle = {0.0,0.0,0.0,0.0};
 /*float anglexw = 0.;
@@ -94,7 +94,7 @@ double yJOff = 0.0;
 double scaleJ = 3.2;
 
 // Starting Julia seed point
-float4 JSOff = {-0.5,0.0,0.0,0.0};
+float4 JSOff = {-0.5,0.1,0.2,0.1};
 
 // Origine, Destination and step for julia seed move
 float4 OriJSOff = {0.0,0.0,0.0,0.0};
@@ -130,7 +130,9 @@ int colorSeed = 0;
 uchar4 colors;
 
 // Timer ID
-unsigned int hTimer;
+unsigned int hTimer; // pour l'affichage des fps
+unsigned int hETATimer; // pour l'affichage du temps restant a calculer
+float totalETAtime; // accumule le temps de chaque pass.
 
 // User interface variables
 int lastx = 0;
@@ -193,11 +195,14 @@ void openHelp()
 void newpic()
 {
 	pass = 0;
+	// pour les images directes, on met le gropix à 1
+	if (julia4D & DIRECTIMAGE) maxgropix = 1;
 	gropix = maxgropix;
 	bloc = 0;
 	nbloc=1;
 	sqrnb=1;
-//	for (int mx=maxgropix;mx/=2;mx>=1) nbloc*=4;
+    cutResetTimer(hETATimer);
+	totalETAtime = 0.f;
 }
 
 void computeFPS()
@@ -210,8 +215,45 @@ void computeFPS()
     if (fpsCount == fpsLimit) {
         char fps[256];
         float ifps = 1.f / (cutGetTimerValue(hTimer) / 1000.f);
-        sprintf(fps, "%Kanulia %3.1f fps", ifps);
- //               ((g_CheckRender && g_CheckRender->IsQAReadback()) ? "AutoTest: " : ""), ifps);
+		float ETAtimer = cutGetTimerValue(hETATimer) /1000.f;
+
+		if ( pass < maxpass )
+		{
+			if (pass==0)
+			{
+
+				if (bloc == 0)
+					sprintf(fps, "%Kanulia START %3.1f fps", ifps);
+				else
+				{
+					float timeleft = (ETAtimer)*(float)(maxgropix*maxgropix)/(float)(bloc);
+					float tottimeleft = timeleft*maxpass - ETAtimer;
+					timeleft -= ETAtimer;
+
+					int hh = (int)(tottimeleft)/3600;
+					int mm = ((int)(tottimeleft)/60)%60;
+					int ss = (int)(tottimeleft)%60;
+					
+					int mm2 = (int)(timeleft)/60;
+					int ss2 = (int)(timeleft)%60;
+					sprintf(fps, "%Kanulia %02d:%02d -- %02d:%02d:%02d -- %3.1f fps", mm2, ss2, hh, mm, ss, ifps);
+				}
+			}
+			else
+			{
+				if (bloc==0)
+					totalETAtime = (ETAtimer)*(float)(maxpass)/(float)(pass);
+				float timeleft = totalETAtime - ETAtimer;
+				int hh = (int)(timeleft)/3600;
+				int mm = ((int)(timeleft)/60)%60;
+				int ss = (int)(timeleft)%60;
+				float perc = (ETAtimer/totalETAtime)*100.f;
+				sprintf(fps, "%Kanulia %04.2f%% -- %02d:%02d:%02d -- %3.1f fps", perc, hh,mm,ss, ifps);
+			}
+		}
+		else
+			sprintf(fps, "%Kanulia DONE %3.1f fps", ifps);
+ //         ((g_CheckRender && g_CheckRender->IsQAReadback()) ? "AutoTest: " : ""), ifps);
 
         glutSetWindowTitle(fps);
         fpsCount = 0;
@@ -362,7 +404,7 @@ void displayFunc(void)
 			double sj = scaleJ / (float)imageW;
 			double xj;
 			double yj;
-			if ( julia4D == 0 ) // blury in 2D mode
+			if ( julia4D == JULIA2D ) // blury in 2D mode
 			{
 				xj = (xs - (double)imageW * 0.5f) * sj + xJOff;
 				yj = (ys - (double)imageH * 0.5f) * sj + yJOff;
@@ -504,6 +546,8 @@ void keyboardFunc(unsigned char k, int, int)
             printf("Shutting down...\n");
             cutilCheckError(cutStopTimer(hTimer) );
             cutilCheckError(cutDeleteTimer(hTimer));
+            cutilCheckError(cutStopTimer(hETATimer) );
+            cutilCheckError(cutDeleteTimer(hETATimer));
             cutilSafeCall(cudaGLUnregisterBufferObject(gl_PBO));
             glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
             printf("Shutdown done.\n");
@@ -683,6 +727,31 @@ void keyboardFunc(unsigned char k, int, int)
 			break;
 		case 'P':
 			vangle.w -= 0.001;
+			break;
+		case 'w':
+			imageW = 3000;
+			imageH = 3000;
+			
+			reshapeFunc(imageW,imageH);
+			
+			break;
+			
+		case 'g': // Direct Image On/Off pas de pixelisation progressive
+			if (julia4D & JULIA4D)
+			{
+				julia4D = julia4D ^ DIRECTIMAGE;
+				printf("julia4D = %d\n", julia4D);
+			}
+			newpic();
+			break;
+			
+		case 'f': // Cross Eye On/Off
+			if (julia4D & JULIA4D)
+			{
+				julia4D = julia4D ^ CROSSEYE;
+				printf("julia4D = %d\n", julia4D);
+			}
+			newpic();
 			break;
 
 		default:
@@ -914,7 +983,7 @@ void juliaMenu(int i)
 			if (julia > 1) julia /= 2;
 			break;
 		case 3:
-			julia4D = 0;
+			julia4D = JULIA2D; //"Flat Julia2D"
 			break;
 		case 4:
 			angle.x = 0.;
@@ -922,7 +991,7 @@ void juliaMenu(int i)
 			angle.z = 0.;
 			angle.w = 0.;
             crunch = 16;
-			julia4D = 1;
+			julia4D = CLOUDJULIA; //"Cloudy Julia4D"
 			break;
 		case 5:
 			angle.x = 0.;
@@ -930,7 +999,7 @@ void juliaMenu(int i)
 			angle.z = 0.;
 			angle.w = 0.;
             crunch = 16;
-			julia4D = 2;
+			julia4D = JULIA4D; //"Solid Julia4D"
 			break;
 
 	}
@@ -1123,8 +1192,10 @@ int main(int argc, char **argv)
         scale = x;
     }
 
-    imageW = 1280;
+	imageW = 1280;
 	imageH = 720;
+//	imageW = 2560;
+//	imageH = 1440;
 
     colors.w = 0;
     colors.x = 3;
@@ -1186,8 +1257,12 @@ int main(int argc, char **argv)
     glutReshapeFunc(reshapeFunc);
     initMenus();
 
+	// timer pour fps
     cutilCheckError(cutCreateTimer(&hTimer));
     cutilCheckError(cutStartTimer(hTimer));
+	// timer pour total time
+    cutilCheckError(cutCreateTimer(&hETATimer));
+    cutilCheckError(cutStartTimer(hETATimer));
 
     atexit(cleanup);
 
