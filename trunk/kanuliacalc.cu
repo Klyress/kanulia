@@ -762,7 +762,7 @@ const float xblur, const float yblur, int *r, int *g, int *b, const float xJOff,
 
 	float x = ((float)ix + (xblur)) * scaleJ + xJOff;
 	float y = ((float)iy + (yblur)) * scaleJ + yJOff;
-	float z = - 3.0;
+	float z = ZOBSERVER;
 	float w = 0.0;
 	
 	if ( julia4D & CROSSEYE )
@@ -777,8 +777,8 @@ const float xblur, const float yblur, int *r, int *g, int *b, const float xJOff,
 		x = ((float)ix + (xblur)) * scaleJ + xJOff;
 	}
 	
-	float dx = sin( 0.7 * step *scaleJ* ( (float) ix /*+ (xblur)*/ - (d_imageW/2.)) / ((float) d_imageW) );
-	float dy = sin( 0.7 * step *scaleJ* ( (float) iy /*+ (yblur)*/ - (d_imageH/2.)) / ((float) d_imageW) );
+	float dx = sin( KANULFOV * step *scaleJ* ( (float) ix /*+ (xblur)*/ - (d_imageW/2.)) / ((float) d_imageW) );
+	float dy = sin( KANULFOV * step *scaleJ* ( (float) iy /*+ (yblur)*/ - (d_imageH/2.)) / ((float) d_imageW) );
 	float dz = step;
 	float dw = 0.;
 	if ( julia4D & CROSSEYE )
@@ -792,7 +792,7 @@ const float xblur, const float yblur, int *r, int *g, int *b, const float xJOff,
 	rotate4(&x,&y,&z,&w,angle);
 	rotate4(&dx,&dy,&dz,&dw,angle);
 	float nd = sqrt(dx*dx+dy*dy+dz*dz+dw*dw);
-	float mx = 0.;
+//	float mx = 0.;
 	//	float ndx =dx/nd;float ndy =dy/nd;float ndz =dz/nd;float ndw =dw/nd;
 	int nb = (dist/step);
 
@@ -819,7 +819,7 @@ const float xblur, const float yblur, int *r, int *g, int *b, const float xJOff,
 	bool out = true; // if ray is out main c=0
 	do {
 		// if inside empty aera
-	/*	if ( y < 0.)
+		if (( y < 0.)&&(CUTJULIA))
 		{
 			// then if going away
 			if (dy < 0.)
@@ -863,7 +863,7 @@ const float xblur, const float yblur, int *r, int *g, int *b, const float xJOff,
 				}
 			}
 		}
-		else*/
+		else
 		{
 			x += dx;y += dy;z += dz;w += dw;
 			//			x += ndx*step;y += ndy*step;z += ndz*step;w += ndw*step;
@@ -896,24 +896,24 @@ const float xblur, const float yblur, int *r, int *g, int *b, const float xJOff,
 				{
 					do {
 						x1 -= d1x;y1 -= d1y;z1 -= d1z;w1 -= d1w;
-						if (x1*x1 + y1*y1 + z1*z1 + w1*w1 > float(4.0)) out=true;
+						if (x1*x1 + y1*y1 + z1*z1 + w1*w1 > OUTMANDELBOX) out=true;
 					} while ((CalcJulia4D(x1, y1, z1, w1, JS, crn) == 0) && (!out) );
 				} else {
 					do {
 						x1 += d1x;y1 += d1y;z1 += d1z;w1 += d1w;
-						if (x1*x1 + y1*y1 + z1*z1 + w1*w1 > float(4.0)) out=true;
+						if (x1*x1 + y1*y1 + z1*z1 + w1*w1 > OUTMANDELBOX) out=true;
 					} while ((CalcJulia4D(x1, y1, z1, w1, JS, crn) != 0) && (!out) );
 				}
 				if (CalcJulia4D(x2, y2, z2, w2, JS, crn)==0)
 				{
 					do {
 						x2 -= d2x;y2 -= d2y;z2 -= d2z;w2 -= d2w;
-						if (x2*x2 + y2*y2 + z2*z2 + w2*w2 > float(4.0)) out=true;
+						if (x2*x2 + y2*y2 + z2*z2 + w2*w2 > OUTMANDELBOX) out=true;
 					} while ((CalcJulia4D(x2, y2, z2, w2, JS, crn) == 0) && (!out) );
 				} else {
 					do {
 						x2 += d2x;y2 += d2y;z2 += d2z;w2 += d2w;
-						if (x2*x2 + y2*y2 + z2*z2 + w2*w2 > float(4.0)) out=true;
+						if (x2*x2 + y2*y2 + z2*z2 + w2*w2 > OUTMANDELBOX) out=true;
 					} while ((CalcJulia4D(x2, y2, z2, w2, JS, crn) != 0) && (!out) );
 				}
 
@@ -944,13 +944,37 @@ const float xblur, const float yblur, int *r, int *g, int *b, const float xJOff,
 				} else c=1;
 			}
 		}
-		if (mx>4.0) c=1;
+//		if (mx>4.0) c=1;
 	} while (c-->0);
 
 	if (out) {
+//		while (x*x+y*y+z*z+w*w<OUTBOX)
+/*		while ((x<OUTBOX)&&(x>-OUTBOX)
+			 &&(y<OUTBOX)&&(y>-OUTBOX)
+			 &&(z<OUTBOX)&&(z>-OUTBOX)
+			 &&(w<OUTBOX)&&(w>-OUTBOX))*/
+/*		{
+			x+=dx;y+=dy;z+=dz;w+=dw;
+		}*/
 		*r = 1;
 		*g = 1;
 		*b = 1;
+//		if ((x-(float)((int)(x*1.))/1.<0.01)
+//		  ||(y-(float)((int)(y*1.))/1.<0.01)
+//		  ||(z-(float)((int)(z*10.))/10.<0.01)
+//		  ||(w-(float)((int)(w*10.))/10.<0.01)
+//			)
+/*		if (
+			  (ABS(x-(float)((int)(x*7.))/7.)<0.01)
+			||(ABS(y-(float)((int)(y*7.))/7.)<0.01)
+			||(ABS(z-(float)((int)(z*7.))/7.)<0.01)
+			||(ABS(w-(float)((int)(w*7.))/7.)<0.01)
+			)
+		{
+			*r = 255;
+			*g = 255;
+			*b = 255;
+		}*/
 	} else {
 		// computing vector
 		x1 -= x;y1 -= y;z1 -= z;w1 -= w;
@@ -1005,10 +1029,10 @@ const float xblur, const float yblur, int *r, int *g, int *b, const float xJOff,
 		out=true;
 		do {
 			x -= xl*step;y -= yl*step;z -= zl*step;w -= wl*step; //sh+=0.1;
-		//	if ( y > 0.)
-			//			if (CalcJulia4Dstep(x, y, z, w, JS, crn,&step)==0) out = false;
-			if (CalcJulia4D(x, y, z, w, JS, crn)==0) out = false;
-		} while ( (x*x + y*y + z*z + w*w < float(4.0)) &&(out));
+			if (( y > 0.)||(!CUTJULIA))
+//				if (CalcJulia4Dstep(x, y, z, w, JS, crn,&step)==0) out = false;
+				if (CalcJulia4D(x, y, z, w, JS, crn)==0) out = false;
+		} while ( (x*x + y*y + z*z + w*w < OUTMANDELBOX) &&(out) && (( y > 0.) || (!CUTJULIA)));
 
 		float li = anl*0.7+0.1;
 		if (!out)

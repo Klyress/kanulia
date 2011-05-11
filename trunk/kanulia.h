@@ -3,8 +3,19 @@
 
 #include <vector_types.h>
 
+#define ABS(x) (x>0)?(x):(-(x))
+
+// square distance where nothing is visible
 #define OUTMANDELBOX 4.0
+
+// distance for the back ground whatever it is
+#define OUTBOX 10.0
+
+// step distance for each computation
 #define RAYSTEP 0.0007
+
+// bool yes if the form is cutted
+#define CUTJULIA 0
 
 // Flag for Julia type
 #define JULIA2D 0
@@ -13,9 +24,19 @@
 #define DIRECTIMAGE 4
 #define CROSSEYE 8
 
+// kind of field of view
+#define KANULFOV 3.1 //0.7
+
+// position of the observer
+#define ZOBSERVER -2.0 //-3.0
+
 // half space between eyes in crosseye mode
 #define SPACEEYE -0.1
+
+// how do cross eye cross
 #define CROSSANGLE 0.00001
+
+
 
 // 4D rotations angles for Julia 4D
 /*__device__ __constant__ float aanglexw;
