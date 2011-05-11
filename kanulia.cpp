@@ -94,7 +94,7 @@ double yJOff = 0.0;
 double scaleJ = 3.2;
 
 // Starting Julia seed point
-float4 JSOff = {-0.5,0.1,0.2,0.1};
+float4 JSOff = {-0.5,0.1,0.0,0.0};
 
 // Origine, Destination and step for julia seed move
 float4 OriJSOff = {0.0,0.0,0.0,0.0};
@@ -459,7 +459,7 @@ void displayFunc(void)
 					maxgropix /= 2;
 					newpic();
 				}
-				if ((maxgropix<maxpass)&&(timeEstimate>1./8.))
+				if ((maxgropix<16)&&(timeEstimate>1./8.))
 				{
 					maxgropix *= 2;
 					newpic();
@@ -729,10 +729,10 @@ void keyboardFunc(unsigned char k, int, int)
 			vangle.w -= 0.001;
 			break;
 		case 'w':
-			imageW = 3000;
-			imageH = 3000;
+			imageW = 2560;
+			imageH = 1600;
 			
-			reshapeFunc(imageW,imageH);
+			glutReshapeWindow(imageW,imageH);
 			
 			break;
 			
@@ -1192,10 +1192,10 @@ int main(int argc, char **argv)
         scale = x;
     }
 
-	imageW = 1280;
+	imageW = 1152;
 	imageH = 720;
-//	imageW = 2560;
-//	imageH = 1440;
+//	imageW = 1920;
+//	imageH = 1200;
 
     colors.w = 0;
     colors.x = 3;
