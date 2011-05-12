@@ -33,6 +33,8 @@ Caution, you can blow up your drivers in julia4D mode
 
 *wheel* zoom in and out also the only way to move to move. by zooming in and out, it is possible to move.
 
+*right clic* pop up menu
+
 === Mandelbrot selection zone ===
 in the lower left corner
 
