@@ -57,4 +57,4 @@ nothing special yet
 
 *left drag* rotate around xw and yw plan
 
-*shift left drag* rotate around xy and xz plan
+*shift left drag* / *middle drag* rotate around xy and xz plan
