@@ -25,6 +25,10 @@ Caution, you can blow up your drivers in julia4D mode
 
 *p* *P* rotate speed around xz plan
 
+*g* Direct Image On/Off no pixelisation ( Warning very GPU eater )
+
+*f* Toggle Cross eye Julia
+
 == Mouse ==
 
 *wheel* zoom in and out also the only way to move to move. by zooming in and out, it is possible to move.
