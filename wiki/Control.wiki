@@ -17,13 +17,13 @@ Caution, you can blow up your drivers in julia4D mode
 
 *j* *J* increase and decrease size of the "mandelbrot selection"
 
-*u* *U* rotate speed around xw plan
+*u* *U* rotate +/- speed around xw plan
 
-*i* *I* rotate speed around yw plan
+*i* *I* rotate +/- speed around yw plan
 
-*o* *O* rotate speed around xy plan
+*o* *O* rotate +/- speed around xy plan
 
-*p* *P* rotate speed around xz plan
+*p* *P* rotate +/- speed around xz plan
 
 *g* Direct Image On/Off no pixelisation ( Warning very GPU eater )
 
