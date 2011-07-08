@@ -752,7 +752,8 @@ __device__ int CloudJulia4D(const float ox, const float oy, const float oz, cons
 } // CalcJulia
 
 // The core Julia CUDA GPU calculation function
-__device__ int SolidJulia4D(const int ix, const int iy, const float4 JS, const float4 angle, const int d_imageW, const int d_imageH, const float scaleJ,
+__device__ int SolidJulia4D(const int ix, const int iy, const float4 JS, const float4 angle,
+const int d_imageW, const int d_imageH, const float scaleJ,
 const float xblur, const float yblur, int *r, int *g, int *b, const float xJOff, const float yJOff, const unsigned int crn, int julia4D)
 {
 	//hue color
@@ -796,20 +797,22 @@ const float xblur, const float yblur, int *r, int *g, int *b, const float xJOff,
 	//	float ndx =dx/nd;float ndy =dy/nd;float ndz =dz/nd;float ndw =dw/nd;
 	int nb = (dist/step);
 
+	// hum sert a rien ?
 	float x0 = 0.0;float y0 = -1.0;float z0 = 0.0;float w0 = 0.0;// normal is the secant plan's normal
+	
+	// Les trois rays qui vont servir a calculer la normale
 	float x1 = step;float y1 = 0.0;float z1 = 0.0;float w1 = 0.0;
 	float x2 = 0.0;float y2 = step;float z2 = 0.0;float w2 = 0.0;
-	float x3 = 0.0;float y3 = 0.0;float z3 = 0.0;float w3 = 1.0;
+	//float x3 = 0.0;float y3 = 0.0;float z3 = 0.0;float w3 = step;
 
 	rotate4(&x1,&y1,&z1,&w1,angle);
 	rotate4(&x2,&y2,&z2,&w2,angle);
-	rotate4(&x3,&y3,&z3,&w3,angle);
 
+	// light source direction
 	float xl = 1.;
 	float yl = -1.;
 	float zl = 1.;
 	float wl = 0.;
-	rotate4(&xl,&yl,&zl,&wl,angle);
 
 	float ddx=dx;
 	float ddy=dy;
@@ -817,12 +820,13 @@ const float xblur, const float yblur, int *r, int *g, int *b, const float xJOff,
 	float ddw=dw;
 	int c=nb;
 	bool out = true; // if ray is out main c=0
+	bool cutplan = false; // if ray hit cutting plan
 	do {
 		// if inside empty aera
 		if (( y < 0.)&&(CUTJULIA))
 		{
 			// then if going away
-			if (dy < 0.)
+			if (dy <= 0.)
 			{
 				// go away
 				x = 4.0;y = 0.;z = 0.;w = 0.;
@@ -859,6 +863,17 @@ const float xblur, const float yblur, int *r, int *g, int *b, const float xJOff,
 					y2 += dy * dhit;
 					z2 += dz * dhit;
 					w2 += dw * dhit;
+				
+					//x3=x + x3;
+					//y3=y + y3;
+					//z3=z + z3;
+					//w3=w + w3;
+					//dhit = -y3/dy;
+					//x3 += dx * dhit;
+					//y3 += dy * dhit;
+					//z3 += dz * dhit;
+					//w3 += dw * dhit;
+					cutplan = true;
 					out = false;
 				}
 			}
@@ -885,13 +900,19 @@ const float xblur, const float yblur, int *r, int *g, int *b, const float xJOff,
 				y2=y + y2;
 				z2=z + z2;
 				w2=w + w2;
+				
+				//x3=x + x3;
+				//y3=y + y3;
+				//z3=z + z3;
+				//w3=w + w3;
 
 				ddx=dx;ddy= dy;ddz=dz;ddw=dw;
-				float d1x=dx;float d1y=dy;float d1z=dz;float d1w=dw;
-				float d2x=dx;float d2y=dy;float d2z=dz;float d2w=dw;
+				float d1x=dx*2.0;float d1y=dy*2.0;float d1z=dz*2.0;float d1w=dw*2.0;
+				float d2x=dx*2.0;float d2y=dy*2.0;float d2z=dz*2.0;float d2w=dw*2.0;
+				//float d3x=dx*2.0;float d3y=dy*2.0;float d3z=dz*2.0;float d3w=dw*2.0;
 				int in=0,in1=0,in2=0;//,in3=0;
 
-				// place les 2 rayons pour les normales contre la forme
+				// place les 3 rayons pour les normales contre la forme
 				if (CalcJulia4D(x1, y1, z1, w1, JS, crn)==0)
 				{
 					do {
@@ -916,12 +937,25 @@ const float xblur, const float yblur, int *r, int *g, int *b, const float xJOff,
 						if (x2*x2 + y2*y2 + z2*z2 + w2*w2 > OUTMANDELBOX) out=true;
 					} while ((CalcJulia4D(x2, y2, z2, w2, JS, crn) != 0) && (!out) );
 				}
+				//if (CalcJulia4D(x3, y3, z3, w3, JS, crn)==0)
+				//{
+				//	do {
+				//		x3 -= d3x;y3 -= d3y;z3 -= d3z;w2 -= d3w;
+				//		if (x3*x3 + y3*y3 + z3*z3 + w3*w3 > OUTMANDELBOX) out=true;
+				//	} while ((CalcJulia4D(x3, y3, z3, w3, JS, crn) == 0) && (!out) );
+				//} else {
+				//	do {
+				//		x3 += d3x;y3 += d3y;z3 += d3z;w3 += d3w;
+				//		if (x3*x3 + y3*y3 + z3*z3 + w3*w3 > OUTMANDELBOX) out=true;
+				//	} while ((CalcJulia4D(x3, y3, z3, w3, JS, crn) != 0) && (!out) );
+				//}
 
 				if (!out) {
 					do {
 						in  = CalcJulia4Dhue(x,  y,  z,  w, JS, &hue, crn);
 						in1 = CalcJulia4D(x1, y1, z1, w1, JS, crn);
 						in2 = CalcJulia4D(x2, y2, z2, w2, JS, crn);
+						//in3 = CalcJulia4D(x3, y3, z3, w3, JS, crn);
 						if (in==0) {
 							x -= ddx;y -= ddy;z -= ddz;w -= ddw;
 						} else {
@@ -937,9 +971,15 @@ const float xblur, const float yblur, int *r, int *g, int *b, const float xJOff,
 						} else {
 							x2 += d2x;y2 += d2y;z2 += d2z;w2 += d2w;
 						}
+						//if (in3==0) {
+						//	x3 -= d3x;y3 -= d3y;z3 -= d3z;w3 -= d3w;
+						//} else {
+						//	x3 += d3x;y3 += d3y;z3 += d3z;w3 += d3w;
+						//}
 						ddx /= 2.0;ddy /= 2.0;ddz /= 2.0;ddw /= 2.0;
 						d1x /= 2.0;d1y /= 2.0;d1z /= 2.0;d1w /= 2.0;
 						d2x /= 2.0;d2y /= 2.0;d2z /= 2.0;d2w /= 2.0;
+						//d3x /= 2.0;d3y /= 2.0;d3z /= 2.0;d3w /= 2.0;
 					} while (c-->0);
 				} else c=1;
 			}
@@ -979,70 +1019,92 @@ const float xblur, const float yblur, int *r, int *g, int *b, const float xJOff,
 		// computing vector
 		x1 -= x;y1 -= y;z1 -= z;w1 -= w;
 		x2 -= x;y2 -= y;z2 -= z;w2 -= w;
+		//x3 -= x;y3 -= y;z3 -= z;w3 -= w;
 		// vector product for normal
 		// 3D Normal in space vue
-		// x0 = x1 * x2 - y1 * y2 - z1 * z2 - w1* w2;
-		// y0 = x1 * y2 + y1 * x2 + z1 * w2 - w1* z2;
-		// z0 = x1 * z2 + z1 * x2 + w1 * y2 - y1* w2;
-		// w0 = x1 * w2 + w1 * x2 + y1 * z2 - z1* y2;
+		//x0 = x1 * x2 - y1 * y2 - z1 * z2 - w1* w2;
+		//y0 = x1 * y2 + y1 * x2 + z1 * w2 - w1* z2;
+		//z0 = x1 * z2 + z1 * x2 + w1 * y2 - y1* w2;
+		//w0 = x1 * w2 + w1 * x2 + y1 * z2 - z1* y2;
 		// 4D Normal
-		x0 = y1*(w2*z3-z2*w3)+y2*(z1*w3-w1*z3)+y3*(w1*z2-z1*w2);
-		y0 = x1*(z2*w3-w2*z3)+x2*(w1*z3-z1*w3)+x3*(z1*w2-w1*z2);
-		z0 = x1*(w2*y3-y2*w3)+x2*(y1*w3-w1*y3)+x3*(w1*y2-y1*w2);
-		w0 = x1*(y2*z3-z2*y3)+x2*(z1*y3-y1*z3)+x3*(y1*z2-z1*y2);
+		//x0 = y1*(w2*z3-z2*w3)+y2*(z1*w3-w1*z3)+y3*(w1*z2-z1*w2);
+		//y0 = x1*(z2*w3-w2*z3)+x2*(w1*z3-z1*w3)+x3*(z1*w2-w1*z2);
+		//z0 = x1*(w2*y3-y2*w3)+x2*(y1*w3-w1*y3)+x3*(w1*y2-y1*w2);
+		//w0 = x1*(y2*z3-z2*y3)+x2*(z1*y3-y1*z3)+x3*(y1*z2-z1*y2);
+
+		// retour dans le repere de la cam
+		rotate4inv(&dx,&dy,&dz,&dw,angle);
+		rotate4inv(&x1,&y1,&z1,&w1,angle);
+		rotate4inv(&x2,&y2,&z2,&w2,angle);
+
 		// 3D Normal in space xyz
-		// x0 = y1 * z2 - z1 * y2;
-		// y0 = z1 * x2 - x1 * z2;
-		// z0 = x1 * y2 - y1 * x2;
-		// w0 = 0.;
+		x0 = z1 * y2 - y1 * z2;
+		y0 = x1 * z2 - z1 * x2;
+		z0 = y1 * x2 - x1 * y2;
+		w0 = 0.;
+		if (cutplan)
+		{
+			x0 = 0.0;y0 = -1.0;z0 = 0.0;w0 = 0.0;// normal is the secant plan's normal
+			rotate4inv(&x0,&y0,&z0,&w0,angle);
+			float n0=sqrt(x0*x0+y0*y0+z0*z0);//+w0*w0);
+			x0/=n0;y0/=n0;z0/=n0;//w0/=n0;
+		}
 
 		// Normalisation
-		float nd=sqrt(dx*dx+dy*dy+dz*dz+dw*dw);
-		float n0=sqrt(x0*x0+y0*y0+z0*z0+w0*w0);
-		float nl=sqrt(xl*xl+yl*yl+zl*zl+wl*wl);
-		dx/=nd;dy/=nd;dz/=nd;dw/=nd;
-		x0/=n0;y0/=n0;z0/=n0;w0/=n0;
-		xl/=nl;yl/=nl;zl/=nl;wl/=nl;
-
+		float n0=sqrt(x0*x0+y0*y0+z0*z0);//+w0*w0);
+		float nl=sqrt(xl*xl+yl*yl+zl*zl);//+wl*wl);
+		float nd=sqrt(dx*dx+dy*dy+dz*dz);//+dw*dw);
+		x0/=n0;y0/=n0;z0/=n0;//w0/=n0;
+		xl/=nl;yl/=nl;zl/=nl;//wl/=nl;
+		dx/=nd;dy/=nd;dz/=nd;//dw/=nd;
+		
 		// angle of direction / normal
-		float anv = (x0 * dx + y0 *dy + z0 *dz + w0 *dw);
-		if (anv<0.) anv=0.;
+/*		float anv = (x0 * dx + y0 *dy + z0 *dz + w0 *dw);
+		if (anv<0.) anv=0.;*/
 
 		// angle of light direction / normal
-		float anl = -(x0* xl + y0* yl + z0*zl + w0*wl);
+		float anl = - (x0* xl + y0* yl + z0*zl);// + w0*wl);
 		if (anl<0.) anl=0.;
+//		dx=0.;dy=0.;dz=1.;dw=0.;
 
-		// radiance
+		// radiance	
 		float anr = 0.;
-		if ( xl*x0 + yl*y0 + zl*z0 + wl*w0 < 0. )
+		float pscal = (xl*x0 + yl*y0 + zl*z0);// + wl*w0);
+		if (  pscal < 0. )
 		{
-			float xr=xl+2.*x0;float yr=yl+2.*y0;float zr=zl+2.*z0;float wr=wl+2.*w0;
-			float nr=sqrt(xr*xr+yr*yr+zr*zr+wr*wr);
-			xr/=nr;yr/=nr;zr/=nr;wr/=nr;
-			anr = -0.85 -(xr*dx + yr*dy + zr*dz + wr*dw);
+			float xr=xl-x0*2.*pscal;float yr=yl-y0*2.*pscal;float zr=zl-z0*2.*pscal;//float wr=wl-w0*2.*pscal;
+			float nr=sqrt(xr*xr+yr*yr+zr*zr);//+wr*wr);
+			xr/=nr;yr/=nr;zr/=nr;//wr/=nr;
+			anr = -(xr*dx + yr*dy + zr*dz);// + wr*dw);
+//			anr = -pscal;
+//			anr = -(x0*dx + y0*dy + z0*dz + w0*dw);
+			anr = anr * 8.5 -7.;
+			//if ( anr < 0.8 ) anr=0.;
+			if ( anr > 1. ) anr=1.;
+			if ( anr < 0. ) anr=0.;
+			anr=anr*anr;
 		}
-		if ( anr < 0. ) anr=0.;
-		anr *= 9.;
-		if ( anr > 1. ) anr=1.;
-		// shadow
+
+		// shadow computation
 		float sh = 1.0;
-		out=true;
+		bool shadow=false;
+		// light source rotate with camera
+		rotate4(&xl,&yl,&zl,&wl,angle);
 		do {
-			x -= xl*step;y -= yl*step;z -= zl*step;w -= wl*step; //sh+=0.1;
+			x -= xl*step;y -= yl*step;z -= zl*step;w -= wl*step;
 			if (( y > 0.)||(!CUTJULIA))
-//				if (CalcJulia4Dstep(x, y, z, w, JS, crn,&step)==0) out = false;
-				if (CalcJulia4D(x, y, z, w, JS, crn)==0) out = false;
-		} while ( (x*x + y*y + z*z + w*w < OUTMANDELBOX) &&(out) && (( y > 0.) || (!CUTJULIA)));
+				if (CalcJulia4D(x, y, z, w, JS, crn)==0) shadow = true;
+		} while ( (x*x + y*y + z*z + w*w < OUTMANDELBOX) &&(!shadow) && (( y > 0.) || (!CUTJULIA)));
 
 		float li = anl*0.7+0.1;
-		if (!out)
+		if (shadow)
 		{
 			sh=0.5;
 			anr=0.0;
 		}
-		float L = (li + (1. - li)*anr*anr) * sh;
+		float L = (li + (1. - li)*anr) * sh;
 		// if ( L < 0.0 ) L = 0.0;
-		HSL2RGB(hue, 0.6, L, r, g, b);
+		HSL2RGB(hue, 0.5, L, r, g, b);
 	}
 	return out;
 } // SolidJulia4D
