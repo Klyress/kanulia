@@ -9,9 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "windows.h"
-
 #include <GL/glew.h>
 
 #if defined(__APPLE__) || defined(MACOSX)
@@ -25,8 +23,8 @@
 #include <cuda_gl_interop.h>
 /*#include <rendercheck_gl.h>*/
 
-
 #include "kanulia.h"
+
 
 // Define the files that are to be save and the reference images for validation
 /*const char *sOriginal[] =
@@ -1145,6 +1143,8 @@ void reshapeFunc(int w, int h)
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
+	//::MessageBox(NULL,"pouet","coucou",MB_OK);
+
     // use command-line specified CUDA device, otherwise use device with highest Gflops/s
     if( cutCheckCmdLineFlag(argc, (const char**)argv, "device") )
         cutilDeviceInit(argc, argv);

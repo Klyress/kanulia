@@ -30,6 +30,31 @@ __device__ inline void rotate4(float *px, float *py, float *pz, float *pw, const
 		*py = t;
 	};
 }
+__device__ inline void rotate4inv(float *px, float *py, float *pz, float *pw, const float4 angle)
+{
+	float t;
+
+	if (angle.w != 0. ) {
+		t   =   *py * cos(-angle.w) + *pw * sin(-angle.w);
+		*pw = - *py * sin(-angle.w) + *pw * cos(-angle.w);
+		*py = t;
+	};
+	if (angle.z != 0. ) {
+		t   =   *pz * cos(-angle.z) + *pw * sin(-angle.z);
+		*pw = - *pz * sin(-angle.z) + *pw * cos(-angle.z);
+		*pz = t;
+	};
+	if (angle.y != 0. ) {
+		t   =   *px * cos(-angle.y) + *pz * sin(-angle.y);
+		*pz = - *px * sin(-angle.y) + *pz * cos(-angle.y);
+		*px = t;
+	};
+	if (angle.x != 0. ) {
+		t  =   *py * cos(-angle.x) + *pz * sin(-angle.x);
+		*pz = - *py * sin(-angle.x) + *pz * cos(-angle.x);
+		*py = t;
+	};
+}
 
 __device__ inline void rotate3(float *px, float *py, float *pz, const float4 angle)
 {

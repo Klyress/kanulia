@@ -12,10 +12,10 @@
 #define OUTBOX 10.0
 
 // step distance for each computation
-#define RAYSTEP 0.0007
+#define RAYSTEP 0.002
 
 // bool yes if the form is cutted
-#define CUTJULIA 0
+#define CUTJULIA 1
 
 // Flag for Julia type
 #define JULIA2D 0
@@ -68,6 +68,7 @@ __device__ inline int CalcMandel4Dcore(const float xPos, const float yPos, const
 extern "C" int inEmulationMode();
 
 __device__ inline void rotate4(float *px, float *py, float *pz, float *pw, const float4 angle);
+__device__ inline void rotate4inv(float *px, float *py, float *pz, float *pw, const float4 angle);
 __device__ inline void rotate3(float *px, float *py, float *pz, const float4 angle);
 
 #endif
