@@ -6,7 +6,7 @@
 #define BLOCKDIM_X 16
 #define BLOCKDIM_Y 16
 
-#define ABS(n) ((n) < 0 ? -(n) : (n))
+//#define ABS(n) ((n) < 0 ? -(n) : (n))
 #define MAX_CRN_IN 2560
 
 // return the argument of a complex number
@@ -526,11 +526,11 @@ __device__ inline int CalcJulia4Dhue(const float xPos, const float yPos, const f
 	do {
 		i--;
 		huenb--;
-		if (huenb==0) *hue = arg(y,z);
+		if (huenb==0) *hue = arg(y-w,z+x);
 
 		if (xx + yy + zz + ww > float(4.0))
 		{
-			// *hue = 0.5 + cos((x+y+z+w)/4.)/2.;
+			// hue = 0.5 + cos((x+y+z+w)/4.)/2.;
 			return i;
 		}
 		z = x * z * float(2.0) + JS.z;
@@ -778,8 +778,8 @@ const float xblur, const float yblur, int *r, int *g, int *b, const float xJOff,
 		x = ((float)ix + (xblur)) * scaleJ + xJOff;
 	}
 	
-	float dx = sin( KANULFOV * step *scaleJ* ( (float) ix /*+ (xblur)*/ - (d_imageW/2.)) / ((float) d_imageW) );
-	float dy = sin( KANULFOV * step *scaleJ* ( (float) iy /*+ (yblur)*/ - (d_imageH/2.)) / ((float) d_imageW) );
+	float dx = sin( KANULFOV * step * scaleJ * ( (float) ix + (xblur) - (d_imageW/2.)) / ((float) d_imageW) );
+	float dy = sin( KANULFOV * step * scaleJ * ( (float) iy + (yblur) - (d_imageH/2.)) / ((float) d_imageW) );
 	float dz = step;
 	float dw = 0.;
 	if ( julia4D & CROSSEYE )

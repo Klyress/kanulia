@@ -11,6 +11,7 @@
 #include <string.h>
 #include "windows.h"
 #include <GL/glew.h>
+#include "KanParam.h"
 
 #if defined(__APPLE__) || defined(MACOSX)
 #include <GLUT/glut.h>
@@ -25,6 +26,12 @@
 
 #include "kanulia.h"
 
+using namespace System;
+using namespace System::ComponentModel;
+using namespace System::Collections;
+using namespace System::Windows::Forms;
+using namespace System::Data;
+using namespace System::Drawing;
 
 // Define the files that are to be save and the reference images for validation
 /*const char *sOriginal[] =
@@ -105,9 +112,9 @@ unsigned int bloc=0;
 unsigned int nbloc=1;
 unsigned int sqrnb=1;
 
-// Affichage pixÃ©lisÃ© de la julia
-unsigned int maxgropix = 16; // taille du bloc maximal pixelisÃ© de calcul rapide
-unsigned int gropix = maxgropix; // taille du gros bloc pixelisÃ© courant
+// Affichage pixélisé de la julia
+unsigned int maxgropix = 16; // taille du bloc maximal pixelisé de calcul rapide
+unsigned int gropix = maxgropix; // taille du gros bloc pixelisé courant
 
 // Starting stationary position and scale motion for Julia
 double xJdOff = 0.0;
@@ -150,6 +157,8 @@ unsigned int frameCount = 0;
 unsigned int g_TotalErrors = 0;
 bool g_Verify = false, g_AutoQuit = false;
 
+//KanParam param;
+
 // CheckFBO/BackBuffer class objects
 //CheckRender       *g_CheckRender = NULL;
 
@@ -176,7 +185,10 @@ bool g_Verify = false, g_AutoQuit = false;
 
 void openHelp()
 {
-	ShellExecute(0, "open", "http://code.google.com/p/kanulia/wiki/Control", 0, 0, 1);
+	System::Windows::Forms::MessageBox::Show("Hello, Windows Forms");
+
+//	Application::Run(gcnew KanParam());
+//	ShellExecute(0, "open", "http://code.google.com/p/kanulia/wiki/Control", 0, 0, 1);
 /*	SHELLEXECUTEINFO	shellInfo = { 0 };
 
 	shellInfo.cbSize	= sizeof( shellInfo );
@@ -193,7 +205,7 @@ void openHelp()
 void newpic()
 {
 	pass = 0;
-	// pour les images directes, on met le gropix Ã  1
+	// pour les images directes, on met le gropix à 1
 	if (julia4D & DIRECTIMAGE) maxgropix = 1;
 	gropix = maxgropix;
 	bloc = 0;
@@ -479,7 +491,7 @@ void displayFunc(void)
 				nbloc=sqrnb*sqrnb;
 //				nbloc=1;
 //				for (unsigned int mx=maxgropix;mx>gropix;mx/=2) nbloc*=4;
-				// si on est dans la 1ere image, on Ã©viteles cases deja affichÃ©
+				// si on est dans la 1ere image, on éviteles cases deja affiché
 				if (pass == 0) bloc = (nbloc/4);
 			}
 			
