@@ -115,6 +115,7 @@ __global__ void Julia4Drepart(uchar4 *dst, const int imageW, const int imageH,
         if ((threadIdx.x==0) && (threadIdx.y==0)) {
             // get block to process
             blockIndex = atomicAdd(&blockCounter, 1);
+            //blockIndex++;
             blockX = blockIndex % gridWidth;            // note: this is slow, but only called once per block here
             blockY = blockIndex / gridWidth;
         }
@@ -296,7 +297,7 @@ void RunJulia4Drepart(uchar4 *dst, const int imageW, const int imageH,
     // zero block counter
 //    unsigned int hBlockCounter = (((grid.x)*(grid.y)/nbloc)+1)*(bloc);
     unsigned int hBlockCounter = 0;
-    cutilSafeCall( cudaMemcpyToSymbol(blockCounter, &hBlockCounter, sizeof(unsigned int), 0, cudaMemcpyHostToDevice ) );
+    /*cutilSafeCall( */cudaMemcpyToSymbol(blockCounter, &hBlockCounter, sizeof(unsigned int), 0, cudaMemcpyHostToDevice /*)*/ );
 
 	int numWorkUnit = numSMs;
 	
@@ -307,7 +308,7 @@ void RunJulia4Drepart(uchar4 *dst, const int imageW, const int imageH,
 						maxgropix, gropix, bloc, crn,
 						colors, frame, animationFrame, grid.x, (grid.x)*(grid.y), julia, julia4D);
 
-    cutilCheckMsg("Julia4D0_sm13 kernel execution failed.\n");
+//    cutilCheckMsg("Julia4D0_sm13 kernel execution failed.\n");
 } // RunJulia4D0
 
 

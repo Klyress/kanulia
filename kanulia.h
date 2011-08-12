@@ -12,10 +12,10 @@
 #define OUTBOX 10.0
 
 // step distance for each computation
-#define RAYSTEP 0.002
+#define RAYSTEP 0.0002
 
 // bool yes if the form is cutted
-#define CUTJULIA 1
+#define CUTJULIA 0
 
 // Flag for Julia type
 #define JULIA2D 0
@@ -25,7 +25,7 @@
 #define CROSSEYE 8
 
 // kind of field of view
-#define KANULFOV 3.1 //0.7
+#define KANULFOV 30. //0.7
 
 // position of the observer
 #define ZOBSERVER -2.0 //-3.0
@@ -64,7 +64,6 @@ __device__ inline int CalcMandelBox4Dhue(const float xPos, const float yPos, con
 
 __device__ inline int CalcMandel4Dcore(const float xPos, const float yPos, const float zPos, const float wPos, const float4 JS, float *hue);
 
-					
 extern "C" int inEmulationMode();
 
 __device__ inline void rotate4(float *px, float *py, float *pz, float *pw, const float4 angle);
